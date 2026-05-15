@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q11 — Non-Food Incrementality | NL Baskets</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Rubik:wght@400;500;700&family=Titan+One&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Rubik', sans-serif; background: #F9F3F0; color: #00615F; }
+
+  .page-header {
+    background: #00615F;
+    padding: 28px 40px 22px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .page-header h1 {
+    font-family: 'Barlow Semi Condensed', sans-serif;
+    font-weight: 700; text-transform: uppercase;
+    font-size: 26px; color: #F9F3F0; letter-spacing: 0.5px;
+  }
+  .page-header .subtitle { font-family: 'Rubik', sans-serif; font-size: 13px; color: #C3EBCB; margin-top: 4px; }
+  .page-header .meta { font-size: 12px; color: #67D695; text-align: right; }
+
+  .tabs { display: flex; background: #00615F; padding: 0 40px; gap: 4px; }
+  .tab-btn {
+    padding: 10px 22px; font-family: 'Rubik', sans-serif; font-size: 13px;
+    font-weight: 500; cursor: pointer; border: none; border-radius: 6px 6px 0 0;
+    background: rgba(255,255,255,0.12); color: #C3EBCB; transition: all 0.2s;
+  }
+  .tab-btn:hover { background: rgba(255,255,255,0.22); }
+  .tab-btn.active { background: #F9F3F0; color: #00615F; font-weight: 700; }
+
+  .content { padding: 32px 40px; max-width: 1100px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .verdict-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+  .verdict-card {
+    background: white; border-radius: 12px; padding: 22px 24px;
+    border-top: 4px solid #03A97B; box-shadow: 0 2px 8px rgba(0,97,95,0.08);
+  }
+  .verdict-card.highlight { border-top-color: #ff7973; }
+  .verdict-card .vc-label {
+    font-family: 'Rubik', sans-serif; font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.8px; color: #0B9078; margin-bottom: 8px;
+  }
+  .verdict-card.highlight .vc-label { color: #ff7973; }
+  .verdict-card .vc-value { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 36px; color: #00615F; line-height: 1; }
+  .verdict-card.highlight .vc-value { color: #ff7973; }
+  .verdict-card .vc-sub { font-size: 12px; color: #666; margin-top: 6px; }
+
+  .verdict-banner {
+    background: #00615F; border-radius: 12px; padding: 20px 28px;
+    display: flex; align-items: center; gap: 20px; margin-bottom: 28px;
+  }
+  .verdict-banner .vb-icon { font-size: 36px; }
+  .verdict-banner .vb-title {
+    font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700;
+    font-size: 20px; text-transform: uppercase; color: #FFFA9A; margin-bottom: 4px;
+  }
+  .verdict-banner .vb-body { font-size: 13px; color: #C3EBCB; line-height: 1.5; }
+
+  .section-title {
+    font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700;
+    font-size: 17px; text-transform: uppercase; color: #00615F;
+    margin-bottom: 16px; margin-top: 8px; letter-spacing: 0.3px;
+  }
+
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .chart-box {
+    background: white; border-radius: 12px; padding: 22px 24px;
+    box-shadow: 0 2px 8px rgba(0,97,95,0.07);
+  }
+  .chart-box .cb-title { font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 13px; color: #00615F; margin-bottom: 16px; }
+  .chart-box .cb-note { font-size: 11px; color: #888; margin-top: 10px; font-style: italic; }
+  .chart-box.full { grid-column: 1 / -1; }
+
+  svg text { font-family: 'Rubik', sans-serif; }
+
+  .insight-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
+  .insight-box {
+    background: white; border-radius: 10px; padding: 18px 20px;
+    border-left: 4px solid #03A97B; box-shadow: 0 2px 6px rgba(0,97,95,0.06);
+  }
+  .insight-box.warn { border-left-color: #ff7973; }
+  .insight-box .ib-head { font-weight: 700; font-size: 13px; color: #00615F; margin-bottom: 6px; }
+  .insight-box.warn .ib-head { color: #cc4a45; }
+  .insight-box .ib-body { font-size: 12px; color: #444; line-height: 1.6; }
+
+  .cannibal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px; }
+  .stat-card {
+    background: white; border-radius: 10px; padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,97,95,0.07); text-align: center;
+  }
+  .stat-card .sc-val { font-family: 'Barlow Semi Condensed', sans-serif; font-weight: 700; font-size: 40px; color: #03A97B; line-height: 1; }
+  .stat-card.negative .sc-val { color: #ff7973; }
+  .stat-card .sc-label { font-size: 12px; color: #555; margin-top: 6px; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <h1>Q11 — Non-Food Incrementality Analysis</h1>
+    <div class="subtitle">NL Baskets · Did personal care &amp; household genuinely increase AOV, or were these already high-AOV users?</div>
+  </div>
+  <div class="meta">Data: fct_order_item_parcel · NL · May 2026<br>Non-food launched: Apr 1, 2026</div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('verdict')">🏆 Verdict</button>
+  <button class="tab-btn" onclick="showTab('aov')">📊 AOV Cohort Analysis</button>
+  <button class="tab-btn" onclick="showTab('cannibal')">🔍 Cannibalization Check</button>
+</div>
+
+<!-- =================== TAB 1: VERDICT =================== -->
+<div class="content">
+<div id="tab-verdict" class="tab-panel active">
+
+  <div class="verdict-banner">
+    <div class="vb-icon">✅</div>
+    <div>
+      <div class="vb-title">Non-food is genuinely incremental — not selection bias, not cannibalization</div>
+      <div class="vb-body">Non-food buyers were NOT pre-selected high-AOV users (their pre-launch median €41.05 = control €40.94).
+      Post-launch their median AOV rose to €43.45 (+€2.40 median, +€6.27 mean). 97.3% of non-food orders contain food — additive baskets, not substitutes. Non-food adds €9.47, displaces only €3.20 of food spend: <strong style="color:#FFFA9A">+€6.27 net incremental per order. Non-food is a real AOV driver.</strong></div>
+    </div>
+  </div>
+
+  <div class="verdict-grid" style="grid-template-columns: 1fr 1fr;">
+    <div class="verdict-card">
+      <div class="vc-label">Selection Bias Check — Pre-Launch AOV</div>
+      <div class="vc-value">€41.05</div>
+      <div class="vc-sub">Non-food buyers' median AOV <em>before</em> launch vs Control post-launch: €40.94 → difference of €0.11 → <strong>No selection bias. These were average users.</strong></div>
+    </div>
+    <div class="verdict-card">
+      <div class="vc-label">Median AOV Lift — Typical User</div>
+      <div class="vc-value">+€2.40</div>
+      <div class="vc-sub">The typical non-food buyer's basket: €41.05 pre → €43.45 post. <strong>Median is used here</strong> — it reflects the middle user and is not pulled up by high-ticket outliers like Robijn (€35.99). The mean lift is larger at +€6.27 (see below).</div>
+    </div>
+  </div>
+
+  <div class="verdict-grid">
+    <div class="verdict-card">
+      <div class="vc-label">New Users Attracted by Non-Food</div>
+      <div class="vc-value">798</div>
+      <div class="vc-sub">34% of non-food buyers had no pre-launch orders<br>Non-food is also a new-user acquisition driver</div>
+    </div>
+    <div class="verdict-card highlight">
+      <div class="vc-label">Food Spend Displaced per Order</div>
+      <div class="vc-value">-€3.20</div>
+      <div class="vc-sub">Pre: €38.72 → Post: €35.52 food item spend<br>Users trim food slightly when adding non-food</div>
+    </div>
+    <div class="verdict-card">
+      <div class="vc-label">Mean Net Incremental Revenue per Order</div>
+      <div class="vc-value">+€6.27</div>
+      <div class="vc-sub">+€9.47 non-food added − €3.20 food displaced = €6.27. <strong>Higher than the +€2.40 median</strong> because the mean is pulled up by high-ticket orders (Robijn, Finish). Both numbers are real — €2.40 is the typical user, €6.27 is the average across all orders including high-value ones.</div>
+    </div>
+  </div>
+
+  <!-- Revenue equation strip -->
+  <div style="background:white;border-radius:12px;padding:20px 28px;margin-bottom:28px;box-shadow:0 2px 8px rgba(0,97,95,0.07);display:flex;align-items:center;justify-content:center;gap:0">
+    <div style="text-align:center;padding:0 24px">
+      <div style="font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:28px;color:#03A97B">+€9.47</div>
+      <div style="font-size:12px;color:#555;margin-top:4px">Non-food spend added<br>per order</div>
+    </div>
+    <div style="font-family:'Barlow Semi Condensed',sans-serif;font-size:28px;font-weight:700;color:#ccc;padding:0 8px">−</div>
+    <div style="text-align:center;padding:0 24px">
+      <div style="font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:28px;color:#ff7973">€3.20</div>
+      <div style="font-size:12px;color:#555;margin-top:4px">Food spend displaced<br>per order</div>
+    </div>
+    <div style="font-family:'Barlow Semi Condensed',sans-serif;font-size:28px;font-weight:700;color:#ccc;padding:0 8px">=</div>
+    <div style="text-align:center;padding:0 24px;border-left:3px solid #C3EBCB;margin-left:8px">
+      <div style="font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:32px;color:#00615F">+€6.27</div>
+      <div style="font-size:12px;color:#00615F;font-weight:700;margin-top:4px">Net incremental revenue<br>per order (+15.6%)</div>
+    </div>
+  </div>
+
+  <div class="section-title">Business Implications</div>
+  <div class="insight-grid">
+    <div class="insight-box">
+      <div class="ib-head">✅ Continue investing in non-food assortment</div>
+      <div class="ib-body">The AOV lift is real and not explained by cherry-picking power users. Non-food buyers were average users pre-launch who upgraded their baskets post-launch. Growing personal care and household assortment will structurally lift AOV.</div>
+    </div>
+    <div class="insight-box">
+      <div class="ib-head">✅ Focus on mixed-basket optimisation, not pure non-food orders</div>
+      <div class="ib-body">97.3% of non-food orders contain food. The value of non-food is as a basket-filler / AOV-lifter, not as a standalone category. Placement, discovery, and bundling with food categories is the strategic lever.</div>
+    </div>
+    <div class="insight-box warn">
+      <div class="ib-head">⚠️ Monitor food displacement as non-food scales</div>
+      <div class="ib-body">Food item spend per order dropped €3.20 (−8.3%). At current scale, the €9.47 non-food contribution more than compensates. If non-food assortment grows and food displacement increases proportionally, net incrementality could compress. Worth tracking quarterly as non-food SKU count expands.</div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== TAB 2: AOV COHORT =================== -->
+<div id="tab-aov" class="tab-panel">
+
+  <div class="section-title">AOV Comparison: Non-Food Buyers vs Control</div>
+
+  <div class="chart-row">
+    <div class="chart-box">
+      <div class="cb-title">Median AOV by Cohort &amp; Period</div>
+      <svg viewBox="0 0 420 280" width="100%">
+        <rect width="420" height="280" fill="white" rx="4"/>
+        <text x="14" y="140" font-size="10" fill="#888" transform="rotate(-90,14,140)" text-anchor="middle">AOV (€)</text>
+        <line x1="55" y1="30" x2="395" y2="30" stroke="#eee" stroke-width="1"/>
+        <line x1="55" y1="80" x2="395" y2="80" stroke="#eee" stroke-width="1"/>
+        <line x1="55" y1="130" x2="395" y2="130" stroke="#eee" stroke-width="1"/>
+        <line x1="55" y1="180" x2="395" y2="180" stroke="#eee" stroke-width="1"/>
+        <line x1="55" y1="230" x2="395" y2="230" stroke="#eee" stroke-width="1"/>
+        <text x="50" y="233" font-size="9" fill="#888" text-anchor="end">€30</text>
+        <text x="50" y="183" font-size="9" fill="#888" text-anchor="end">€37</text>
+        <text x="50" y="133" font-size="9" fill="#888" text-anchor="end">€44</text>
+        <text x="50" y="83" font-size="9" fill="#888" text-anchor="end">€51</text>
+        <rect x="80" y="119" width="60" height="111" fill="#C3EBCB" rx="3"/>
+        <text x="110" y="113" font-size="11" fill="#0B9078" text-anchor="middle" font-weight="600">€41.05</text>
+        <rect x="160" y="96" width="60" height="134" fill="#03A97B" rx="3"/>
+        <text x="190" y="90" font-size="11" fill="#00615F" text-anchor="middle" font-weight="700">€43.45</text>
+        <line x1="110" y1="119" x2="160" y2="96" stroke="#ff7973" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <text x="135" y="100" font-size="10" fill="#ff7973" text-anchor="middle" font-weight="700">+€2.40</text>
+        <rect x="270" y="121" width="60" height="109" fill="#B5DAE2" rx="3"/>
+        <text x="300" y="115" font-size="11" fill="#00615F" text-anchor="middle" font-weight="600">€40.94</text>
+        <line x1="55" y1="230" x2="395" y2="230" stroke="#ddd" stroke-width="1"/>
+        <text x="110" y="248" font-size="10" fill="#555" text-anchor="middle">NFB · Pre-launch</text>
+        <text x="110" y="259" font-size="10" fill="#555" text-anchor="middle">(Oct–Mar)</text>
+        <text x="190" y="248" font-size="10" fill="#00615F" text-anchor="middle" font-weight="700">NFB · Post-launch</text>
+        <text x="190" y="259" font-size="10" fill="#00615F" text-anchor="middle" font-weight="700">(Apr–May)</text>
+        <text x="300" y="248" font-size="10" fill="#555" text-anchor="middle">Control · Post-launch</text>
+        <text x="300" y="259" font-size="10" fill="#555" text-anchor="middle">(Food Only)</text>
+      </svg>
+      <div class="cb-note">NFB = Non-Food Buyer cohort. Median user-level AOV. 1,567 users with pre-launch history; 2,365 post-launch; 8,064 control.</div>
+    </div>
+
+    <div class="chart-box">
+      <div class="cb-title">P25–P75 AOV Range by Cohort &amp; Period</div>
+      <svg viewBox="0 0 420 280" width="100%">
+        <rect width="420" height="280" fill="white" rx="4"/>
+        <line x1="55" y1="30" x2="395" y2="30" stroke="#eee"/>
+        <line x1="55" y1="90" x2="395" y2="90" stroke="#eee"/>
+        <line x1="55" y1="150" x2="395" y2="150" stroke="#eee"/>
+        <line x1="55" y1="210" x2="395" y2="210" stroke="#eee"/>
+        <text x="50" y="213" font-size="9" fill="#888" text-anchor="end">€20</text>
+        <text x="50" y="153" font-size="9" fill="#888" text-anchor="end">€30</text>
+        <text x="50" y="93" font-size="9" fill="#888" text-anchor="end">€40</text>
+        <text x="50" y="33" font-size="9" fill="#888" text-anchor="end">€55</text>
+        <rect x="85" y="86" width="50" height="88" fill="#C3EBCB" rx="3" opacity="0.8"/>
+        <line x1="85" y1="114" x2="135" y2="114" stroke="#0B9078" stroke-width="2.5"/>
+        <text x="155" y="90" font-size="10" fill="#666">P75: €45.60</text>
+        <text x="155" y="118" font-size="10" fill="#0B9078" font-weight="600">Median: €41.05</text>
+        <text x="155" y="178" font-size="10" fill="#666">P25: €30.95</text>
+        <rect x="200" y="54" width="50" height="63" fill="#03A97B" rx="3" opacity="0.85"/>
+        <line x1="200" y1="99" x2="250" y2="99" stroke="#00615F" stroke-width="2.5"/>
+        <text x="258" y="58" font-size="10" fill="#00615F" font-weight="600">P75: €50.93</text>
+        <text x="258" y="103" font-size="10" fill="#00615F" font-weight="700">Median: €43.45</text>
+        <text x="258" y="121" font-size="10" fill="#00615F" font-weight="600">P25: €40.43</text>
+        <line x1="55" y1="240" x2="395" y2="240" stroke="#ddd"/>
+        <text x="110" y="256" font-size="10" fill="#555" text-anchor="middle">NFB · Pre-launch</text>
+        <text x="225" y="256" font-size="10" fill="#00615F" text-anchor="middle" font-weight="700">NFB · Post-launch</text>
+      </svg>
+      <div class="cb-note">Key finding: the P25 jumped from €30.95 → €40.43. Post-launch, even the bottom quartile of non-food buyers now exceeds the FDT €40 threshold.</div>
+    </div>
+  </div>
+
+  <div class="chart-box full">
+    <div class="cb-title">Selection Bias Test — Were Non-Food Buyers Already High-AOV?</div>
+    <svg viewBox="0 0 900 120" width="100%">
+      <rect width="900" height="120" fill="white" rx="4"/>
+      <line x1="60" y1="60" x2="840" y2="60" stroke="#ddd" stroke-width="2"/>
+      <circle cx="100" cy="60" r="6" fill="#C3EBCB"/>
+      <text x="100" y="48" font-size="10" fill="#888" text-anchor="middle">Oct 2025</text>
+      <text x="100" y="82" font-size="10" fill="#888" text-anchor="middle">Basket launch</text>
+      <line x1="500" y1="20" x2="500" y2="100" stroke="#ff7973" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <circle cx="500" cy="60" r="7" fill="#ff7973"/>
+      <text x="500" y="14" font-size="10" fill="#ff7973" text-anchor="middle" font-weight="700">Apr 1, 2026 — Non-Food Launch</text>
+      <rect x="150" y="42" width="310" height="36" fill="#C3EBCB" rx="4" opacity="0.6"/>
+      <text x="305" y="65" font-size="12" fill="#0B9078" text-anchor="middle" font-weight="700">NFB Median AOV (pre): €41.05</text>
+      <rect x="540" y="42" width="280" height="36" fill="#B5DAE2" rx="4" opacity="0.6"/>
+      <text x="680" y="65" font-size="12" fill="#00615F" text-anchor="middle" font-weight="700">Control Median AOV (post): €40.94</text>
+      <text x="500" y="108" font-size="11" fill="#666" text-anchor="middle">▲ Pre-launch NFB AOV ≈ Control AOV → No selection bias</text>
+    </svg>
+    <div class="cb-note">The critical test: if non-food buyers were always power-users, their pre-launch AOV would be visibly above the control group. Instead they were essentially identical (€41.05 vs €40.94), confirming the post-launch uplift is caused by non-food, not user self-selection.</div>
+  </div>
+</div>
+
+<!-- =================== TAB 3: CANNIBALIZATION =================== -->
+<div id="tab-cannibal" class="tab-panel">
+
+  <div class="section-title">Cannibalization Check — Did Non-Food Replace Food?</div>
+
+  <div class="cannibal-grid">
+    <div class="stat-card">
+      <div class="sc-val">97.3%</div>
+      <div class="sc-label">Of non-food orders also contain food items<br><strong>1,718 of 1,766 orders are mixed baskets</strong></div>
+    </div>
+    <div class="stat-card negative">
+      <div class="sc-val">-€3.20</div>
+      <div class="sc-label">Food item spend displaced per order<br><strong>€38.72 pre → €35.52 post (−8.3%)</strong></div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-val">+€6.27</div>
+      <div class="sc-label">Net incremental revenue per order<br><strong>+€9.47 non-food − €3.20 food = genuine growth</strong></div>
+    </div>
+  </div>
+
+  <div class="chart-box full">
+    <div class="cb-title">Mixed Basket Breakdown — What's Inside a Non-Food Order</div>
+    <svg viewBox="0 0 900 160" width="100%">
+      <rect width="900" height="160" fill="white" rx="4"/>
+      <rect x="75" y="50" width="730" height="50" fill="#03A97B" rx="6"/>
+      <rect x="795" y="50" width="20" height="50" fill="#ff7973" rx="0 6 6 0"/>
+      <text x="440" y="80" font-size="14" fill="white" text-anchor="middle" font-weight="700">97.3% Mixed Orders (Food + Non-Food)</text>
+      <text x="805" y="80" font-size="9" fill="white" text-anchor="middle">2.7%</text>
+      <text x="440" y="120" font-size="11" fill="#00615F" text-anchor="middle">1,718 mixed basket orders — users add non-food on top of food items</text>
+      <text x="805" y="120" font-size="10" fill="#cc4a45" text-anchor="middle">48 pure</text>
+      <text x="805" y="133" font-size="10" fill="#cc4a45" text-anchor="middle">non-food</text>
+      <rect x="75" y="140" width="12" height="12" fill="#03A97B" rx="2"/>
+      <text x="93" y="151" font-size="10" fill="#555">Mixed (food + non-food)</text>
+      <rect x="220" y="140" width="12" height="12" fill="#ff7973" rx="2"/>
+      <text x="238" y="151" font-size="10" fill="#555">Non-food only</text>
+    </svg>
+  </div>
+
+  <div class="chart-box full" style="margin-top:20px">
+    <div class="cb-title">Food vs Non-Food Spend Breakdown — Pre vs Post Launch (NFB Cohort)</div>
+    <svg viewBox="0 0 900 200" width="100%">
+      <rect width="900" height="200" fill="white" rx="4"/>
+      <line x1="80" y1="30" x2="860" y2="30" stroke="#f0f0f0"/>
+      <line x1="80" y1="60" x2="860" y2="60" stroke="#f0f0f0"/>
+      <line x1="80" y1="90" x2="860" y2="90" stroke="#f0f0f0"/>
+      <line x1="80" y1="120" x2="860" y2="120" stroke="#f0f0f0"/>
+      <line x1="80" y1="150" x2="860" y2="150" stroke="#f0f0f0"/>
+      <line x1="80" y1="180" x2="860" y2="180" stroke="#ccc"/>
+      <text x="72" y="183" font-size="9" fill="#888" text-anchor="end">€0</text>
+      <text x="72" y="153" font-size="9" fill="#888" text-anchor="end">€10</text>
+      <text x="72" y="123" font-size="9" fill="#888" text-anchor="end">€20</text>
+      <text x="72" y="93" font-size="9" fill="#888" text-anchor="end">€30</text>
+      <text x="72" y="63" font-size="9" fill="#888" text-anchor="end">€40</text>
+      <text x="72" y="33" font-size="9" fill="#888" text-anchor="end">€50</text>
+      <rect x="160" y="64" width="100" height="116" fill="#03A97B" rx="4"/>
+      <text x="210" y="58" font-size="12" fill="#00615F" text-anchor="middle" font-weight="700">€38.72</text>
+      <text x="210" y="175" font-size="10" fill="white" text-anchor="middle" font-weight="600">Food</text>
+      <text x="210" y="196" font-size="11" fill="#555" text-anchor="middle">Pre-launch</text>
+      <rect x="360" y="45" width="100" height="28" fill="#FFFA9A" rx="4 4 0 0"/>
+      <text x="410" y="63" font-size="11" fill="#00615F" text-anchor="middle" font-weight="700">+€9.47</text>
+      <rect x="360" y="73" width="100" height="107" fill="#03A97B" rx="0 0 4 4"/>
+      <text x="410" y="115" font-size="12" fill="white" text-anchor="middle" font-weight="700">€35.52</text>
+      <text x="410" y="135" font-size="10" fill="white" text-anchor="middle">Food</text>
+      <text x="410" y="196" font-size="11" fill="#555" text-anchor="middle">Post-launch</text>
+      <text x="410" y="38" font-size="12" fill="#00615F" text-anchor="middle" font-weight="700">€45.0 total item spend</text>
+      <line x1="265" y1="64" x2="355" y2="73" stroke="#ff7973" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="310" y="60" font-size="11" fill="#ff7973" text-anchor="middle" font-weight="700">−€3.20 food</text>
+      <rect x="560" y="60" width="260" height="100" fill="#F9F3F0" rx="8"/>
+      <text x="690" y="90" font-size="13" fill="#555" text-anchor="middle">+€9.47 non-food</text>
+      <text x="690" y="110" font-size="13" fill="#ff7973" text-anchor="middle">− €3.20 food displaced</text>
+      <line x1="580" y1="120" x2="800" y2="120" stroke="#C3EBCB" stroke-width="1.5"/>
+      <text x="690" y="143" font-size="16" fill="#00615F" text-anchor="middle" font-weight="700">= +€6.27 net incremental</text>
+    </svg>
+    <div class="cb-note">Food item spend dropped €3.20 per order (−8.3%) when non-food was added. Non-food contributed +€9.47. Net result: +€6.27 per order is genuinely new revenue.</div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-box">
+      <div class="ib-head">🧺 Interpretation: additive, not substitutive</div>
+      <div class="ib-body">97.3% mixed baskets means users are building bigger baskets, not swapping food for non-food. The -€3.20 food spend drop is real but minor — likely a slight ceiling effect where users allocate some food budget to non-food. Net basket value still goes up by €6.27 per order.</div>
+    </div>
+    <div class="insight-box warn">
+      <div class="ib-head">⚠️ Monitor food spend per order as non-food grows</div>
+      <div class="ib-body">Food item spend dropped €3.20 (−8.3%) per order. At current scale this is more than offset by the non-food spend added. But if non-food assortment scales significantly and food displacement increases proportionally, net incrementality could compress. Worth tracking quarterly.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /.content -->
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
