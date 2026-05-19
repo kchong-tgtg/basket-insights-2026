@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Multi-SKU Order Analysis — NL Baskets</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F9F3F0; font-family: 'Rubik', sans-serif; color: #00615F; }
+
+    /* HEADER */
+    header {
+      background: #00615F;
+      padding: 26px 40px 22px;
+      display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    header h1 {
+      font-family: 'Barlow Semi Condensed', sans-serif;
+      font-weight: 700; text-transform: uppercase; font-size: 24px;
+      color: #F9F3F0; letter-spacing: 0.5px;
+    }
+    header p { font-size: 13px; color: #67D695; margin-top: 4px; }
+    .meta { font-size: 12px; color: #C3EBCB; text-align: right; line-height: 1.7; }
+
+    /* TABS */
+    .tab-bar {
+      background: #00615F;
+      display: flex; gap: 4px;
+      padding: 0 40px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .tab-btn {
+      padding: 11px 22px; cursor: pointer; border: none; background: transparent;
+      font-family: 'Rubik', sans-serif; font-size: 13px; font-weight: 500;
+      color: #C3EBCB; border-bottom: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { color: #F9F3F0; }
+    .tab-btn.active { color: #FFFA9A; border-bottom-color: #FFFA9A; }
+
+    /* MAIN */
+    main { max-width: 1120px; margin: 0 auto; padding: 28px 24px 60px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* INSIGHT BANNER */
+    .banner {
+      background: #00615F; color: #F9F3F0; border-radius: 10px;
+      padding: 16px 24px; margin-bottom: 24px; font-size: 13.5px; line-height: 1.7;
+    }
+    .banner strong { color: #FFFA9A; }
+    .banner .tag {
+      display: inline-block; background: #ff7973; color: #fff;
+      border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 700;
+      margin-right: 4px; vertical-align: middle;
+    }
+
+    /* KPI CARDS */
+    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 26px; }
+    .kpi-row.four { grid-template-columns: repeat(4, 1fr); }
+    .kpi-card {
+      background: #fff; border-radius: 10px; padding: 20px 22px;
+      border-top: 4px solid #03A97B;
+      box-shadow: 0 2px 8px rgba(0,97,95,0.07);
+    }
+    .kpi-card.coral { border-top-color: #ff7973; }
+    .kpi-card.mid { border-top-color: #0B9078; }
+    .kpi-card .val {
+      font-family: 'Barlow Semi Condensed', sans-serif;
+      font-size: 38px; font-weight: 700; color: #00615F; line-height: 1;
+    }
+    .kpi-card.coral .val { color: #ff7973; }
+    .kpi-card .label {
+      font-size: 11px; font-weight: 600; color: #0B9078;
+      margin-top: 5px; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .kpi-card .sub { font-size: 12px; color: #999; margin-top: 3px; }
+
+    /* SECTION HEADER */
+    .sec-hdr {
+      font-family: 'Barlow Semi Condensed', sans-serif;
+      font-weight: 700; text-transform: uppercase; font-size: 15px;
+      color: #00615F; letter-spacing: 0.4px;
+      margin-bottom: 14px; padding-bottom: 7px;
+      border-bottom: 2px solid #C3EBCB;
+    }
+
+    /* CHART GRID */
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 26px; }
+    .chart-card {
+      background: #fff; border-radius: 10px; padding: 22px;
+      box-shadow: 0 2px 8px rgba(0,97,95,0.07);
+    }
+    .chart-card h3 {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; color: #00615F; margin-bottom: 14px;
+    }
+    .chart-card canvas { max-height: 320px; }
+    .chart-card.full { grid-column: 1 / -1; }
+
+    /* QUARTERLY PERIOD CARDS */
+    .quarter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 26px; }
+    .q-card {
+      background: #fff; border-radius: 10px; padding: 20px 22px;
+      box-shadow: 0 2px 8px rgba(0,97,95,0.07);
+      border-left: 5px solid #03A97B;
+    }
+    .q-card.q4 { border-left-color: #0B9078; }
+    .q-card.q1 { border-left-color: #ff7973; }
+    .q-card.q2 { border-left-color: #03A97B; }
+    .q-card .q-label {
+      font-family: 'Barlow Semi Condensed', sans-serif;
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      color: #888; letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .q-card .q-rate {
+      font-family: 'Barlow Semi Condensed', sans-serif;
+      font-size: 42px; font-weight: 700; line-height: 1;
+    }
+    .q-card.q4 .q-rate { color: #0B9078; }
+    .q-card.q1 .q-rate { color: #ff7973; }
+    .q-card.q2 .q-rate { color: #03A97B; }
+    .q-card .q-sub { font-size: 12px; color: #888; margin-top: 5px; }
+    .q-card .q-detail { font-size: 12px; color: #00615F; margin-top: 8px; line-height: 1.5; }
+
+    /* MONTHLY OBSERVATIONS */
+    .obs-card {
+      background: #fff; border-radius: 10px; padding: 24px 28px;
+      box-shadow: 0 2px 8px rgba(0,97,95,0.07); margin-bottom: 26px;
+    }
+    .obs-card h3 {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; color: #00615F; margin-bottom: 18px;
+      padding-bottom: 8px; border-bottom: 2px solid #C3EBCB;
+    }
+    .obs-item {
+      display: flex; gap: 16px; padding: 12px 0;
+      border-bottom: 1px solid #ece8e4;
+    }
+    .obs-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .obs-month-label {
+      font-family: 'Barlow Semi Condensed', sans-serif;
+      font-weight: 700; font-size: 14px; text-transform: uppercase;
+      color: #00615F; min-width: 110px; padding-top: 1px;
+    }
+    .obs-rate-pill {
+      display: inline-block;
+      font-family: 'Barlow Semi Condensed', sans-serif;
+      font-size: 13px; font-weight: 700;
+      background: #C3EBCB; color: #00615F;
+      border-radius: 5px; padding: 2px 8px; margin-right: 8px;
+      white-space: nowrap;
+    }
+    .obs-rate-pill.peak { background: #ff7973; color: #fff; }
+    .obs-rate-pill.low  { background: #DCEEF7; color: #0B9078; }
+    .obs-text { font-size: 13px; color: #444; line-height: 1.6; }
+
+    /* TABLE */
+    .table-card {
+      background: #fff; border-radius: 10px; padding: 22px;
+      box-shadow: 0 2px 8px rgba(0,97,95,0.07); overflow-x: auto;
+    }
+    .table-card h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #00615F; margin-bottom: 14px; }
+    table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: #00615F; color: #F9F3F0; padding: 10px 10px;
+      text-align: left; font-family: 'Barlow Semi Condensed', sans-serif;
+      font-weight: 600; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.4px; white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    thead th:hover { background: #0B9078; }
+    thead th.sorted-asc::after { content: ' ↑'; }
+    thead th.sorted-desc::after { content: ' ↓'; }
+    tbody tr:nth-child(even) { background: #F9F3F080; }
+    tbody tr:hover { background: #C3EBCB33; }
+    tbody td { padding: 9px 10px; border-bottom: 1px solid #ece8e4; color: #00615F; white-space: nowrap; }
+    .sku-name { font-weight: 500; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-tag { display: inline-block; background: #C3EBCB; color: #00615F; border-radius: 4px; padding: 2px 7px; font-size: 11px; font-weight: 500; }
+    .cat-tag { display: inline-block; background: #DCEEF7; color: #0B9078; border-radius: 4px; padding: 2px 7px; font-size: 11px; }
+    .cat-tag.seasonal { background: #FFFA9A; color: #555; }
+    .rate-wrap { display: flex; align-items: center; gap: 7px; min-width: 120px; }
+    .rate-bar { height: 7px; border-radius: 4px; background: #03A97B; min-width: 4px; flex-shrink: 0; }
+    .rate-bar.high { background: #ff7973; }
+    .rate-num { font-weight: 700; min-width: 42px; font-size: 13px; flex-shrink: 0; }
+    .avg-badge { background: #ff7973; color: #fff; border-radius: 4px; padding: 1px 5px; font-size: 10px; font-weight: 700; margin-left: 4px; }
+
+    footer { text-align: center; font-size: 11px; color: #bbb; margin-top: 40px; }
+
+    @media (max-width: 760px) {
+      .chart-grid, .kpi-row, .quarter-grid { grid-template-columns: 1fr; }
+      .tab-bar { padding: 0 16px; }
+      main { padding: 20px 12px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Multi-SKU Order Analysis</h1>
+    <p>NL Baskets · How often do customers buy 2+ of the same SKU in one order?</p>
+  </div>
+  <div class="meta">
+    Period: Oct 2025 – May 2026<br/>
+    Market: Netherlands · Basket orders only<br/>
+    Source: Redshift · fct_order_item_parcel
+  </div>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('full')">Full Period</button>
+  <button class="tab-btn" onclick="switchTab('quarterly')">Quarterly</button>
+  <button class="tab-btn" onclick="switchTab('monthly')">Monthly</button>
+  <button class="tab-btn" onclick="switchTab('methodology')">Methodology</button>
+</div>
+
+<main>
+
+  <!-- ══════════════ FULL PERIOD ══════════════ -->
+  <div class="tab-panel active" id="tab-full">
+
+    <div class="banner">
+      <strong>42.4% of all NL basket orders</strong> contain 2 or more units of the same SKU (29,327 of 69,196 orders, Oct 2025–May 2026).
+      Behaviour is concentrated almost entirely in <strong>Drinks</strong>, with several SKUs exceeding 50% multi-buy rate.
+      This supports the hypothesis that <span class="tag">Trade Packs</span> and larger case sizes would improve GP and reduce pick complexity.
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card coral">
+        <div class="val">42.4%</div>
+        <div class="label">Orders with 2+ same SKU</div>
+        <div class="sub">29,327 of 69,196 total orders</div>
+      </div>
+      <div class="kpi-card">
+        <div class="val">69,196</div>
+        <div class="label">Total NL basket orders</div>
+        <div class="sub">Oct 2025 – May 2026</div>
+      </div>
+      <div class="kpi-card mid">
+        <div class="val">59.5%</div>
+        <div class="label">Highest single-SKU multi-buy rate</div>
+        <div class="sub">Chupa Chups Sparkling Drankjes (€1.99)</div>
+      </div>
+    </div>
+
+    <div class="sec-hdr">Top 15 SKUs by Multi-Buy</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>By Volume — Multi-Buy Orders</h3>
+        <canvas id="chartVol"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>By Rate — % of Orders Buying 2+ of Same SKU</h3>
+        <canvas id="chartRate"></canvas>
+      </div>
+    </div>
+
+    <div class="sec-hdr" id="skuTableHeader">Full SKU Table — Top 40 (Oct 2025 – May 2026)</div>
+    <div class="table-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <h3 style="margin-bottom:0;">Click column headers to sort &nbsp;·&nbsp; <span style="color:#ff7973">■</span> = rate ≥ 50% &nbsp;·&nbsp; AVG 2+ = avg qty per order ≥ 2.0</h3>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label for="monthFilter" style="font-size:12px;font-weight:600;color:#00615F;text-transform:uppercase;letter-spacing:0.4px;">Filter by month:</label>
+          <select id="monthFilter" onchange="applyMonthFilter()" style="font-family:'Rubik',sans-serif;font-size:13px;padding:6px 12px;border:1px solid #C3EBCB;border-radius:6px;color:#00615F;background:#fff;cursor:pointer;">
+            <option value="all">Full Period (Oct'25 – May'26)</option>
+            <option value="2025-10">Oct 2025</option>
+            <option value="2025-11">Nov 2025</option>
+            <option value="2025-12">Dec 2025</option>
+            <option value="2026-01">Jan 2026</option>
+            <option value="2026-02">Feb 2026</option>
+            <option value="2026-03">Mar 2026</option>
+            <option value="2026-04">Apr 2026</option>
+            <option value="2026-05">May 2026 (MTD)</option>
+          </select>
+        </div>
+      </div>
+      <table id="skuTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">SKU</th>
+            <th onclick="sortTable(1)">Item</th>
+            <th onclick="sortTable(2)">Category</th>
+            <th onclick="sortTable(3)">Brand</th>
+            <th onclick="sortTable(4)">Price</th>
+            <th onclick="sortTable(5)">Total Orders</th>
+            <th onclick="sortTable(6)">Multi-buy Orders</th>
+            <th onclick="sortTable(7)">Avg Qty</th>
+            <th onclick="sortTable(8)">Multi-buy Rate</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════ QUARTERLY ══════════════ -->
+  <div class="tab-panel" id="tab-quarterly">
+
+    <div class="banner">
+      Multi-buy rate <strong>grew from 39.7% in Q4 2025 to 44.8% in Q1 2026</strong> — a 5pp increase quarter-on-quarter. Q2 2026 (partial, Apr–May) is tracking at 42.2%, suggesting the rate has stabilised above the Q4 baseline. The Q1 spike was driven by a notable January surge to <strong>55.4%</strong>.
+    </div>
+
+    <div class="quarter-grid">
+      <div class="q-card q4">
+        <div class="q-label">Q4 2025 · Oct – Dec</div>
+        <div class="q-rate">39.7%</div>
+        <div class="q-sub">Multi-buy rate</div>
+        <div class="q-detail">
+          25,582 total orders<br/>
+          10,158 multi-SKU orders<br/>
+          <strong>Seasonal spike in Dec (49.5%)</strong><br/>
+          driven by advent calendar SKUs
+        </div>
+      </div>
+      <div class="q-card q1">
+        <div class="q-label">Q1 2026 · Jan – Mar</div>
+        <div class="q-rate">44.8%</div>
+        <div class="q-sub">Multi-buy rate &nbsp; <span style="background:#ff7973;color:#fff;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:700">PEAK QTR</span></div>
+        <div class="q-detail">
+          29,640 total orders<br/>
+          13,267 multi-SKU orders<br/>
+          <strong>Jan hit 55.4%</strong> — highest month;<br/>
+          rate normalised by Mar (36.3%)
+        </div>
+      </div>
+      <div class="q-card q2">
+        <div class="q-label">Q2 2026 · Apr – May (partial)</div>
+        <div class="q-rate">42.2%</div>
+        <div class="q-sub">Multi-buy rate</div>
+        <div class="q-detail">
+          13,974 total orders<br/>
+          5,902 multi-SKU orders<br/>
+          <strong>Stabilising above Q4 baseline;</strong><br/>
+          May running at 43.5% MTD
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Quarterly Multi-Buy Rate (%)</h3>
+        <canvas id="chartQRate"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Quarterly Order Volume Breakdown</h3>
+        <canvas id="chartQVol"></canvas>
+      </div>
+    </div>
+
+    <div class="banner" style="background:#F9F3F0;color:#00615F;border:1px solid #C3EBCB;">
+      <strong>What to watch in Q2/Q3:</strong> The Q4 seasonal spike was expected (advent calendars). The Q1 January surge is more interesting — it likely reflects post-holiday stocking behaviour and new SKU availability. If the rate holds above 40% through Q2 without seasonal drivers, it strengthens the commercial case for trade pack optimisation as a structural initiative rather than a seasonal artefact.
+    </div>
+  </div>
+
+  <!-- ══════════════ MONTHLY ══════════════ -->
+  <div class="tab-panel" id="tab-monthly">
+
+    <div class="banner">
+      The monthly trend reveals two key patterns: a <strong>seasonal Dec–Jan spike</strong> (advent calendars + post-Christmas stocking, peaking at 55.4% in Jan) and a subsequent normalisation in Feb–Mar. The rate is now <strong>recovering through Apr–May</strong>, suggesting multi-buy is becoming more structural, not just seasonal.
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card full">
+        <h3>Monthly Multi-Buy Rate (%) &amp; Total Orders</h3>
+        <canvas id="chartMonthly" style="max-height:260px"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Monthly Multi-Buy Orders (Volume)</h3>
+        <canvas id="chartMonthVol"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Monthly Total Orders vs Multi-Buy Orders</h3>
+        <canvas id="chartMonthStack"></canvas>
+      </div>
+    </div>
+
+    <div class="sec-hdr">Month-by-Month Readout</div>
+    <div class="obs-card">
+      <h3>Key Observations</h3>
+
+      <div class="obs-item">
+        <div class="obs-month-label">Oct 2025</div>
+        <div class="obs-text">
+          <span class="obs-rate-pill low">32.2%</span>
+          Lowest rate in the period. Likely reflects early-stage basket assortment with fewer repeat-buy SKUs in the catalogue at launch.
+        </div>
+      </div>
+
+      <div class="obs-item">
+        <div class="obs-month-label">Nov 2025</div>
+        <div class="obs-text">
+          <span class="obs-rate-pill">40.0%</span>
+          Rate picks up as catalogue matures. First month above 40%, establishing a cleaner baseline.
+        </div>
+      </div>
+
+      <div class="obs-item">
+        <div class="obs-month-label">Dec 2025</div>
+        <div class="obs-text">
+          <span class="obs-rate-pill">49.5%</span>
+          Rate jumps close to 50%, driven by seasonal SKUs — Pukka Thee Adventskalender and Tony's Chocolonely Adventskalender both show high multi-buy volume. Seasonal effect, not structural.
+        </div>
+      </div>
+
+      <div class="obs-item">
+        <div class="obs-month-label">Jan 2026</div>
+        <div class="obs-text">
+          <span class="obs-rate-pill peak">55.4% — Peak</span>
+          Highest month in the period, and notably the highest-volume month (9,603 orders). Post-holiday stocking behaviour likely a factor, potentially amplified by new drink SKUs entering the catalogue in January. Worth investigating what was listed or relisted this month.
+        </div>
+      </div>
+
+      <div class="obs-item">
+        <div class="obs-month-label">Feb 2026</div>
+        <div class="obs-text">
+          <span class="obs-rate-pill">43.1%</span>
+          Rate normalises after the January peak. Still above Q4 baseline, suggesting not all of January's behaviour was seasonal.
+        </div>
+      </div>
+
+      <div class="obs-item">
+        <div class="obs-month-label">Mar 2026</div>
+        <div class="obs-text">
+          <span class="obs-rate-pill low">36.3%</span>
+          Sharp dip — second lowest month. Possibly tied to seasonal SKU rotation (advent / winter items delisted). Worth cross-referencing which high-multi-buy SKUs were active in Jan/Feb but not March.
+        </div>
+      </div>
+
+      <div class="obs-item">
+        <div class="obs-month-label">Apr – May 2026</div>
+        <div class="obs-text">
+          <span class="obs-rate-pill">41.5% / 43.5%</span>
+          Recovering and stabilising in the 41–44% range without any seasonal tailwind. If this holds through Q2, it strengthens the case that multi-buy above 40% is a structural baseline — not just a seasonal artefact — and should inform the trade pack optimisation roadmap.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+<footer>Analysis by Keith Chong · Too Good To Go NL Data Analytics · May 2026</footer>
+
+<script>
+/* ─── DATA ─── */
+const monthlyData = [
+  { month: 'Oct \'25', totalOrders: 9934,  multiOrders: 3198, rate: 32.2 },
+  { month: 'Nov \'25', totalOrders: 8293,  multiOrders: 3317, rate: 40.0 },
+  { month: 'Dec \'25', totalOrders: 7355,  multiOrders: 3643, rate: 49.5 },
+  { month: 'Jan \'26', totalOrders: 9603,  multiOrders: 5321, rate: 55.4 },
+  { month: 'Feb \'26', totalOrders: 9838,  multiOrders: 4244, rate: 43.1 },
+  { month: 'Mar \'26', totalOrders: 10199, multiOrders: 3702, rate: 36.3 },
+  { month: 'Apr \'26', totalOrders: 8622,  multiOrders: 3575, rate: 41.5 },
+  { month: 'May \'26', totalOrders: 5352,  multiOrders: 2327, rate: 43.5, partial: true },
+];
+
+const quarterlyData = [
+  { label: "Q4 '25\nOct–Dec", rate: 39.7, total: 25582, multi: 10158 },
+  { label: "Q1 '26\nJan–Mar", rate: 44.8, total: 29640, multi: 13267 },
+  { label: "Q2 '26\nApr–May*", rate: 42.2, total: 13974, multi: 5902 },
+];
+
+const skuData = [
+  { sku:'TGTGNL00004606', item:'Thee Adventskalender',         cat:'SEASONAL',  brand:'Pukka',           price:10.99, totalOrders:1743, multiOrders:591, avgQty:1.34, rate:33.9 },
+  { sku:'TGTGNL00004923', item:'0% Bier',                       cat:'DRINKS',    brand:'Birra Moretti',    price:3.99,  totalOrders:1000, multiOrders:411, avgQty:1.41, rate:41.1 },
+  { sku:'TGTGNL00004868', item:'0% Suiker Toegevoegd',          cat:'DRINKS',    brand:'Chocomel',         price:5.49,  totalOrders:1146, multiOrders:398, avgQty:1.35, rate:34.7 },
+  { sku:'TGTGNL00004924', item:'Framboos Cider 0.0%',           cat:'DRINKS',    brand:'Appel Bandit',     price:4.49,  totalOrders:1309, multiOrders:358, avgQty:1.27, rate:27.3 },
+  { sku:'TGTGNL00004775', item:'Cola Lime',                     cat:'DRINKS',    brand:'Coca-Cola',        price:3.99,  totalOrders:954,  multiOrders:314, avgQty:1.33, rate:32.9 },
+  { sku:'TGTGNL00004754', item:'Italian Style Focaccia',        cat:'SNACKS',    brand:'Pringles',         price:2.99,  totalOrders:1710, multiOrders:255, avgQty:1.15, rate:14.9 },
+  { sku:'TGTGNL00005129', item:'Ice Tea Green Zero',            cat:'DRINKS',    brand:'Lipton',           price:3.99,  totalOrders:501,  multiOrders:249, avgQty:1.50, rate:49.7 },
+  { sku:'TGTGNL00004669', item:'Ginger Beer',                   cat:'DRINKS',    brand:'Bundaberg',        price:7.99,  totalOrders:563,  multiOrders:242, avgQty:1.43, rate:43.0 },
+  { sku:'TGTGNL00004317', item:'Barista Oat 1L',                cat:'DRINKS',    brand:'Alpro',            price:5.99,  totalOrders:801,  multiOrders:228, avgQty:1.28, rate:28.5 },
+  { sku:'TGTGNL00004387', item:'Party Mix',                     cat:'SNACKS',    brand:'Milka',            price:9.99,  totalOrders:2144, multiOrders:213, avgQty:1.10, rate:9.9  },
+  { sku:'TGTGNL00005116', item:'Ice Tea Peach',                 cat:'DRINKS',    brand:'Lipton',           price:3.99,  totalOrders:589,  multiOrders:210, avgQty:1.36, rate:35.7 },
+  { sku:'TGTGNL00004883', item:'Adventskalender',               cat:'SEASONAL',  brand:"Tony's Chocolonely", price:7.49, totalOrders:552, multiOrders:208, avgQty:1.38, rate:37.7 },
+  { sku:'TGTGNL00004530', item:'Drinkmaaltijd Chocolate',       cat:'HEALTH',    brand:'Yfood',            price:3.99,  totalOrders:500,  multiOrders:200, avgQty:1.40, rate:40.0 },
+  { sku:'TGTGNL00004467', item:'Sojadrink zonder suikers 1L',   cat:'DRINKS',    brand:'Alpro',            price:4.99,  totalOrders:614,  multiOrders:195, avgQty:1.32, rate:31.8 },
+  { sku:'TGTGNL00004601', item:'Non Alcoholic Winter IPA',      cat:'DRINKS',    brand:'Lowlander',        price:7.99,  totalOrders:787,  multiOrders:187, avgQty:1.24, rate:23.8 },
+  { sku:'TGTGNL00005241', item:'Sojadrink zonder suikers 1L',   cat:'DRINKS',    brand:'Alpro',            price:8.99,  totalOrders:502,  multiOrders:153, avgQty:1.31, rate:30.5 },
+  { sku:'TGTGNL00005012', item:'Ice Tea Peach',                 cat:'DRINKS',    brand:'Lipton',           price:2.99,  totalOrders:292,  multiOrders:152, avgQty:2.00, rate:52.1 },
+  { sku:'TGTGNL00005737', item:'Iced Koffie',                   cat:'DRINKS',    brand:"Carlito's",        price:4.49,  totalOrders:326,  multiOrders:148, avgQty:1.45, rate:45.4 },
+  { sku:'TGTGNL00005061', item:'Ice Tea Green Zero',            cat:'DRINKS',    brand:'Lipton',           price:3.99,  totalOrders:387,  multiOrders:145, avgQty:1.37, rate:37.5 },
+  { sku:'TGTGNL00005062', item:'Ice Tea Green Lemon',           cat:'DRINKS',    brand:'Lipton',           price:3.99,  totalOrders:436,  multiOrders:144, avgQty:1.33, rate:33.0 },
+  { sku:'TGTGNL00005642', item:'Haverrijst Minuutje',           cat:'PANTRY',    brand:'Lassie',           price:1.99,  totalOrders:452,  multiOrders:142, avgQty:1.31, rate:31.4 },
+  { sku:'TGTGNL00004424', item:'Lime Cola',                     cat:'DRINKS',    brand:'Coca-Cola',        price:7.99,  totalOrders:694,  multiOrders:138, avgQty:1.20, rate:19.9 },
+  { sku:'TGTGNL00005306', item:'Ice Tea Peach XL',              cat:'DRINKS',    brand:'Lipton',           price:9.99,  totalOrders:707,  multiOrders:138, avgQty:1.19, rate:19.5 },
+  { sku:'TGTGNL00005699', item:'Caramel Sea Salt',              cat:'SNACKS',    brand:'Twix',             price:6.99,  totalOrders:770,  multiOrders:137, avgQty:1.18, rate:17.8 },
+  { sku:'TGTGNL00004635', item:'Mix Tonic',                     cat:'DRINKS',    brand:'Schweppes',        price:5.99,  totalOrders:357,  multiOrders:133, avgQty:1.37, rate:37.3 },
+  { sku:'TGTGNL00006006', item:'Sparkling Drankjes',            cat:'DRINKS',    brand:'Chupa Chups',      price:1.99,  totalOrders:215,  multiOrders:128, avgQty:1.60, rate:59.5 },
+  { sku:'TGTGNL00005206', item:'Ice Tea Peach XL',              cat:'DRINKS',    brand:'Lipton',           price:9.99,  totalOrders:506,  multiOrders:124, avgQty:1.25, rate:24.5 },
+  { sku:'TGTGNL00004307', item:'Ice Tea Peach Zero',            cat:'DRINKS',    brand:'Lipton',           price:10.99, totalOrders:836,  multiOrders:122, avgQty:1.15, rate:14.6 },
+  { sku:'TGTGNL00004819', item:'Chocolademelk 200ml',           cat:'DRINKS',    brand:'Chocomel',         price:6.99,  totalOrders:455,  multiOrders:118, avgQty:1.26, rate:25.9 },
+  { sku:'TGTGNL00005011', item:'Original en Cakejes',           cat:'SNACKS',    brand:'Oreo',             price:6.49,  totalOrders:475,  multiOrders:118, avgQty:1.25, rate:24.8 },
+  { sku:'TGTGNL00004798', item:'Bonbonbloc',                    cat:'SNACKS',    brand:"Côte d'Or",        price:6.99,  totalOrders:673,  multiOrders:117, avgQty:1.17, rate:17.4 },
+  { sku:'TGTGNL00005601', item:'Ice Tea Peach XL',              cat:'DRINKS',    brand:'Lipton',           price:9.99,  totalOrders:517,  multiOrders:115, avgQty:1.22, rate:22.2 },
+  { sku:'TGTGNL00003954', item:'Drinkmaaltijd Chocolate',       cat:'HEALTH',    brand:'Yfood',            price:5.49,  totalOrders:351,  multiOrders:114, avgQty:1.32, rate:32.5 },
+  { sku:'TGTGNL00005095', item:'1+ Vis Selectie Multipack',     cat:'PET FOOD',  brand:'Whiskas',          price:4.99,  totalOrders:202,  multiOrders:113, avgQty:2.00, rate:55.9 },
+  { sku:'TGTGNL00005155', item:'Ice Tea Green Zero',            cat:'DRINKS',    brand:'Lipton',           price:4.49,  totalOrders:465,  multiOrders:113, avgQty:1.24, rate:24.3 },
+  { sku:'TGTGNL00005827', item:'Haverdrank',                    cat:'DRINKS',    brand:'Alpro',            price:5.49,  totalOrders:261,  multiOrders:112, avgQty:1.43, rate:42.9 },
+  { sku:'TGTGNL00005774', item:'1Kcal Appel Perzik',            cat:'DRINKS',    brand:'Dubbelfrisss',     price:2.99,  totalOrders:220,  multiOrders:111, avgQty:1.50, rate:50.5 },
+  { sku:'TGTGNL00004773', item:'Chocolade',                     cat:'SNACKS',    brand:"Côte d'Or",        price:3.99,  totalOrders:299,  multiOrders:111, avgQty:1.37, rate:37.1 },
+  { sku:'TGTGNL00005649', item:'Rood Fruit Drinkyoghurt',       cat:'DRINKS',    brand:'Fristi',           price:11.99, totalOrders:482,  multiOrders:111, avgQty:1.23, rate:23.0 },
+  { sku:'TGTGNL00004795', item:'Ice Tea Peach',                 cat:'DRINKS',    brand:'Lipton',           price:3.99,  totalOrders:321,  multiOrders:108, avgQty:1.34, rate:33.6 },
+];
+
+/* ─── TABS ─── */
+function switchTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+/* ─── CHART HELPERS ─── */
+const GREEN = '#03A97B', CORAL = '#ff7973', DARK = '#00615F', PALE = '#C3EBCB', MID = '#0B9078';
+const font = { family: 'Rubik', size: 11 };
+const gridColor = '#e8e4e0';
+
+function hBarOpts(labelFn) {
+  return {
+    indexAxis: 'y', responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: labelFn } } },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { font } },
+      y: { ticks: { font, color: DARK }, grid: { display: false } }
+    }
+  };
+}
+
+/* ─── FULL PERIOD CHARTS ─── */
+const top15Vol = [...skuData].sort((a,b) => b.multiOrders - a.multiOrders).slice(0,15);
+const top15Rate = [...skuData].sort((a,b) => b.rate - a.rate).slice(0,15);
+
+new Chart(document.getElementById('chartVol'), {
+  type: 'bar',
+  data: {
+    labels: top15Vol.map(d => `${d.brand} — ${d.item.length > 18 ? d.item.slice(0,18)+'…' : d.item}`),
+    datasets: [{ data: top15Vol.map(d => d.multiOrders), backgroundColor: top15Vol.map(d => d.rate >= 50 ? CORAL : GREEN), borderRadius: 4 }]
+  },
+  options: hBarOpts(ctx => ` ${ctx.parsed.x.toLocaleString()} orders`)
+});
+
+new Chart(document.getElementById('chartRate'), {
+  type: 'bar',
+  data: {
+    labels: top15Rate.map(d => `${d.brand} — ${d.item.length > 18 ? d.item.slice(0,18)+'…' : d.item}`),
+    datasets: [{ data: top15Rate.map(d => d.rate), backgroundColor: top15Rate.map(d => d.rate >= 50 ? CORAL : GREEN), borderRadius: 4 }]
+  },
+  options: { ...hBarOpts(ctx => ` ${ctx.parsed.x}%`), scales: { x: { grid: { color: gridColor }, ticks: { font, callback: v => v+'%' }, max: 70 }, y: { ticks: { font, color: DARK }, grid: { display: false } } } }
+});
+
+/* ─── QUARTERLY CHARTS ─── */
+new Chart(document.getElementById('chartQRate'), {
+  type: 'bar',
+  data: {
+    labels: ["Q4 '25\n(Oct–Dec)", "Q1 '26\n(Jan–Mar)", "Q2 '26\n(Apr–May*)"],
+    datasets: [{
+      data: [39.7, 44.8, 42.2],
+      backgroundColor: [MID, CORAL, GREEN],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}%` } } },
+    scales: {
+      y: { min: 30, max: 52, grid: { color: gridColor }, ticks: { font, callback: v => v+'%' } },
+      x: { grid: { display: false }, ticks: { font } }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartQVol'), {
+  type: 'bar',
+  data: {
+    labels: ["Q4 '25", "Q1 '26", "Q2 '26*"],
+    datasets: [
+      { label: 'Single-SKU Orders', data: [15424, 16373, 8072], backgroundColor: PALE, borderRadius: 4 },
+      { label: 'Multi-SKU Orders',  data: [10158, 13267, 5902], backgroundColor: GREEN, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font, boxWidth: 12 } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}` } } },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { font } },
+      y: { stacked: true, grid: { color: gridColor }, ticks: { font } }
+    }
+  }
+});
+
+/* ─── MONTHLY CHARTS ─── */
+const mLabels = monthlyData.map(d => d.month + (d.partial ? '*' : ''));
+
+new Chart(document.getElementById('chartMonthly'), {
+  type: 'bar',
+  data: {
+    labels: mLabels,
+    datasets: [
+      {
+        type: 'line', label: 'Multi-buy Rate (%)',
+        data: monthlyData.map(d => d.rate),
+        borderColor: CORAL, backgroundColor: CORAL + '22',
+        pointBackgroundColor: monthlyData.map(d => d.rate >= 50 ? CORAL : DARK),
+        pointRadius: 5, tension: 0.3, yAxisID: 'yRate', order: 1
+      },
+      {
+        type: 'bar', label: 'Total Orders',
+        data: monthlyData.map(d => d.totalOrders),
+        backgroundColor: PALE, borderRadius: 4, yAxisID: 'yVol', order: 2
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { font, boxWidth: 12 } },
+      tooltip: { mode: 'index' }
+    },
+    scales: {
+      yRate: { type: 'linear', position: 'right', min: 25, max: 65, grid: { color: gridColor }, ticks: { font, callback: v => v+'%' } },
+      yVol:  { type: 'linear', position: 'left',  grid: { display: false }, ticks: { font } },
+      x: { grid: { display: false }, ticks: { font } }
+    }
+  }
+});
+
+new Chart(document.getElementById('chartMonthVol'), {
+  type: 'bar',
+  data: {
+    labels: mLabels,
+    datasets: [{
+      data: monthlyData.map(d => d.multiOrders),
+      backgroundColor: monthlyData.map(d => d.rate >= 50 ? CORAL : GREEN),
+      borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString()} multi-buy orders` } } },
+    scales: { x: { grid: { display: false }, ticks: { font } }, y: { grid: { color: gridColor }, ticks: { font } } }
+  }
+});
+
+new Chart(document.getElementById('chartMonthStack'), {
+  type: 'bar',
+  data: {
+    labels: mLabels,
+    datasets: [
+      { label: 'Single-SKU', data: monthlyData.map(d => d.totalOrders - d.multiOrders), backgroundColor: PALE, borderRadius: 4 },
+      { label: 'Multi-SKU',  data: monthlyData.map(d => d.multiOrders), backgroundColor: GREEN, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font, boxWidth: 12 } }, tooltip: { mode: 'index' } },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { font } },
+      y: { stacked: true, grid: { color: gridColor }, ticks: { font } }
+    }
+  }
+});
+
+
+/* ─── SKU TABLE ─── */
+let sortCol = 6, sortDir = -1;
+const keys = ['sku','item','cat','brand','price','totalOrders','multiOrders','avgQty','rate'];
+
+function renderTable(data) {
+  document.getElementById('tableBody').innerHTML = data.map(d => `
+    <tr>
+      <td style="font-size:11px;color:#aaa">${d.sku}</td>
+      <td class="sku-name">${d.item}${d.avgQty >= 2 ? '<span class="avg-badge">AVG 2+</span>' : ''}</td>
+      <td><span class="cat-tag${d.cat === 'SEASONAL' ? ' seasonal' : ''}">${d.cat}</span></td>
+      <td><span class="brand-tag">${d.brand}</span></td>
+      <td>€${d.price.toFixed(2)}</td>
+      <td>${d.totalOrders.toLocaleString()}</td>
+      <td><strong>${d.multiOrders.toLocaleString()}</strong></td>
+      <td>${d.avgQty.toFixed(2)}</td>
+      <td>
+        <div class="rate-wrap">
+          <div class="rate-bar${d.rate >= 50 ? ' high' : ''}" style="width:${Math.round(d.rate*1.2)}px"></div>
+          <span class="rate-num" style="color:${d.rate >= 50 ? '#ff7973' : '#00615F'}">${d.rate}%</span>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+const monthlySkuData = {
+  '2025-10': [
+    {sku:'TGTGNL00004317',item:'Barista Oat 1L',cat:'DRINKS',brand:'Alpro',price:5.99,totalOrders:718,multiOrders:203,avgQty:1.0,rate:28.3},
+    {sku:'TGTGNL00004318',item:'Sojadrink zonder suikers 1L',cat:'DRINKS',brand:'Alpro',price:9.49,totalOrders:433,multiOrders:100,avgQty:1.0,rate:23.1},
+    {sku:'TGTGNL00004249',item:'Ice Tea Green Zero',cat:'DRINKS',brand:'Lipton',price:8.99,totalOrders:488,multiOrders:76,avgQty:1.0,rate:15.6},
+    {sku:'TGTGNL00004254',item:'Boba Box',cat:'DRINKS',brand:'The Inspire Food Company',price:7.99,totalOrders:395,multiOrders:73,avgQty:1.0,rate:18.5},
+    {sku:'TGTGNL00004424',item:'Lime Cola',cat:'DRINKS',brand:'Coca-Cola',price:7.99,totalOrders:328,multiOrders:70,avgQty:1.0,rate:21.3},
+    {sku:'TGTGNL00003952',item:'Koffiecapsules Ristretto',cat:'DRINKS',brand:'L\'Or',price:11.99,totalOrders:182,multiOrders:69,avgQty:1.0,rate:37.9},
+    {sku:'TGTGNL00003953',item:'Drinkmaaltijd Fresh Berry',cat:'HEALTH',brand:'Yfood',price:10.49,totalOrders:312,multiOrders:67,avgQty:1.0,rate:21.5},
+    {sku:'TGTGNL00003954',item:'Drinkmaaltijd Chocolate',cat:'HEALTH',brand:'Yfood',price:5.49,totalOrders:215,multiOrders:64,avgQty:1.0,rate:29.8},
+    {sku:'TGTGNL00004387',item:'Party Mix',cat:'SNACKS',brand:'Milka',price:9.99,totalOrders:614,multiOrders:64,avgQty:1.0,rate:10.4},
+    {sku:'TGTGNL00004466',item:'Dessert Donkere Chocolade',cat:'PANTRY',brand:'Alpro',price:5.99,totalOrders:244,multiOrders:56,avgQty:1.0,rate:23.0},
+    {sku:'TGTGNL00004356',item:'Koffiecapsules',cat:'DRINKS',brand:'L\'Or',price:4.99,totalOrders:98,multiOrders:56,avgQty:3.0,rate:57.1},
+    {sku:'TGTGNL00004361',item:'Popchips & Hoola Hoops',cat:'SNACKS',brand:'Chio',price:3.99,totalOrders:329,multiOrders:52,avgQty:1.0,rate:15.8},
+    {sku:'TGTGNL00003991',item:'Original Koekjes',cat:'SNACKS',brand:'Oreo',price:5.99,totalOrders:419,multiOrders:52,avgQty:1.0,rate:12.4},
+    {sku:'TGTGNL00004307',item:'Ice Tea Peach Zero',cat:'DRINKS',brand:'Lipton',price:10.99,totalOrders:459,multiOrders:51,avgQty:1.0,rate:11.1},
+    {sku:'TGTGNL00004329',item:'Overload Snackreep',cat:'SNACKS',brand:'Reese\'s',price:8.99,totalOrders:483,multiOrders:51,avgQty:1.0,rate:10.6},
+    {sku:'TGTGNL00004319',item:'Dessert Donkere Chocolade',cat:'PANTRY',brand:'Alpro',price:5.99,totalOrders:299,multiOrders:50,avgQty:1.0,rate:16.7},
+    {sku:'TGTGNL00004414',item:'White Chocolate',cat:'SNACKS',brand:'Milka',price:4.99,totalOrders:242,multiOrders:50,avgQty:1.0,rate:20.7},
+    {sku:'TGTGNL00004467',item:'Sojadrink zonder suikers 1L',cat:'DRINKS',brand:'Alpro',price:4.99,totalOrders:174,multiOrders:49,avgQty:1.0,rate:28.2},
+    {sku:'TGTGNL00004378',item:'Bio Snackrepen',cat:'SNACKS',brand:'Smaakt',price:5.99,totalOrders:260,multiOrders:46,avgQty:1.0,rate:17.7},
+    {sku:'TGTGNLTEST4308',item:'Ice Tea Green Zero',cat:'DRINKS',brand:'Lipton',price:10.99,totalOrders:392,multiOrders:45,avgQty:1.0,rate:11.5},
+    {sku:'TGTGNL00004426',item:'Mix Repen',cat:'SNACKS',brand:'Cote d\'Or',price:8.49,totalOrders:383,multiOrders:44,avgQty:1.0,rate:11.5},
+    {sku:'TGTGNL00004263',item:'Protein Drankjes',cat:'HEALTH',brand:'NXT Level',price:6.99,totalOrders:274,multiOrders:43,avgQty:1.0,rate:15.7},
+    {sku:'TGTGNL00004360',item:'Non-Alc Pumpkin Bier',cat:'DRINKS',brand:'Lowlander',price:9.99,totalOrders:300,multiOrders:42,avgQty:1.0,rate:14.0},
+    {sku:'TGTGNL00004181',item:'Air Dried Noodles',cat:'MEALS',brand:'Pulmuone',price:3.99,totalOrders:301,multiOrders:41,avgQty:1.0,rate:13.6},
+    {sku:'TGTGNL00004262',item:'Repen en Shakes',cat:'HEALTH',brand:'Optimum Nutrition',price:8.49,totalOrders:237,multiOrders:40,avgQty:1.0,rate:16.9},
+    {sku:'TGTGNL00003951',item:'Mix Repen',cat:'SNACKS',brand:'NAKD',price:9.49,totalOrders:316,multiOrders:39,avgQty:1.0,rate:12.3},
+    {sku:'TGTGNL00004464',item:'Original Cookies',cat:'SNACKS',brand:'Oreo',price:6.99,totalOrders:347,multiOrders:38,avgQty:1.0,rate:11.0},
+    {sku:'TGTGNL00004331',item:'Mignonnette Double Milk',cat:'SNACKS',brand:'Cote d\'Or',price:7.99,totalOrders:348,multiOrders:38,avgQty:1.0,rate:10.9},
+    {sku:'TGTGNL00004393',item:'Siropen Mix',cat:'DRINKS',brand:'Karvan Cevitam',price:8.99,totalOrders:281,multiOrders:38,avgQty:1.0,rate:13.5},
+    {sku:'TGTGNL00004309',item:'Ice Tea Green Lemon',cat:'DRINKS',brand:'Lipton',price:10.99,totalOrders:403,multiOrders:37,avgQty:1.0,rate:9.2},
+    {sku:'TGTGNL00004311',item:'Tomatenpuree',cat:'PANTRY',brand:'Mutti',price:5.49,totalOrders:246,multiOrders:37,avgQty:1.0,rate:15.0},
+    {sku:'TGTGNL00004009',item:'Alternatief Suiker',cat:'PANTRY',brand:'Pure Via',price:6.49,totalOrders:167,multiOrders:36,avgQty:1.0,rate:21.6},
+    {sku:'TGTGNL00004330',item:'Truffel XL',cat:'SNACKS',brand:'Maltesers',price:6.99,totalOrders:314,multiOrders:35,avgQty:1.0,rate:11.1},
+    {sku:'TGTGNL00004333',item:'Pinda Karamel',cat:'SNACKS',brand:'Milka',price:8.49,totalOrders:348,multiOrders:35,avgQty:1.0,rate:10.1},
+    {sku:'TGTGNL00004252',item:'Crunchy Muesli',cat:'BREAKFAST',brand:'Vitalis',price:8.99,totalOrders:413,multiOrders:35,avgQty:1.0,rate:8.5},
+    {sku:'TGTGNL00004401',item:'Fijnproevers Vleugje Kerrie',cat:'SNACKS',brand:'Duyvis',price:3.99,totalOrders:183,multiOrders:34,avgQty:1.0,rate:18.6},
+    {sku:'TGTGNL00004244',item:'Bonen',cat:'PANTRY',brand:'HAK',price:8.49,totalOrders:448,multiOrders:34,avgQty:1.0,rate:7.6},
+    {sku:'TGTGNL00004381',item:'Crunchy Muesli Mix',cat:'BREAKFAST',brand:'Holie\'s',price:7.49,totalOrders:242,multiOrders:33,avgQty:1.0,rate:13.6},
+    {sku:'TGTGNL00004250',item:'Ice Tea Sparkling',cat:'DRINKS',brand:'Lipton',price:12.99,totalOrders:338,multiOrders:33,avgQty:1.0,rate:9.8},
+    {sku:'TGTGNL00004173',item:'Party Mix',cat:'SNACKS',brand:'Milka',price:9.99,totalOrders:451,multiOrders:33,avgQty:1.0,rate:7.3},
+    {sku:'TGTGNL00004338',item:'Praline Karamel',cat:'SNACKS',brand:'Cote d\'Or',price:9.99,totalOrders:307,multiOrders:33,avgQty:1.0,rate:10.7},
+    {sku:'TGTGNL00004118',item:'Knacke Original',cat:'SNACKS',brand:'Leksands',price:6.49,totalOrders:291,multiOrders:31,avgQty:1.0,rate:10.7},
+    {sku:'TGTGNL00004313',item:'Crunchy Cookies',cat:'SNACKS',brand:'Koeckebackers',price:6.99,totalOrders:248,multiOrders:31,avgQty:1.0,rate:12.5},
+    {sku:'TGTGNL00004337',item:'Praline Puur',cat:'SNACKS',brand:'Cote d\'Or',price:9.99,totalOrders:306,multiOrders:30,avgQty:1.0,rate:9.8},
+    {sku:'TGTGNL00004314',item:'Chocowafel Caramel',cat:'SNACKS',brand:'Verkade',price:12.99,totalOrders:351,multiOrders:30,avgQty:1.0,rate:8.5},
+    {sku:'TGTGNL00004339',item:'Popped Crisps',cat:'SNACKS',brand:'Popworks',price:8.99,totalOrders:306,multiOrders:30,avgQty:1.0,rate:9.8},
+    {sku:'TGTGNL00003997',item:'Groot Sint Schuimsnoep',cat:'SNACKS',brand:'Schuttelaar',price:6.49,totalOrders:186,multiOrders:30,avgQty:1.0,rate:16.1},
+    {sku:'TGTGNL00004089',item:'Drinkmaaltijd Vegan Chocolade',cat:'HEALTH',brand:'Yfood',price:8.99,totalOrders:134,multiOrders:29,avgQty:1.0,rate:21.6},
+    {sku:'TGTGNL00003990',item:'Less Carb Peanut-cashew bars',cat:'SNACKS',brand:'Smaakt',price:6.99,totalOrders:307,multiOrders:29,avgQty:1.0,rate:9.4},
+    {sku:'TGTGNL00004248',item:'Mix Sappen',cat:'DRINKS',brand:'Versojus',price:7.99,totalOrders:302,multiOrders:29,avgQty:1.0,rate:9.6},
+  ],
+  '2025-11': [
+    {sku:'TGTGNL00004606',item:'Thee Adventskalender',cat:'SEASONAL',brand:'Pukka',price:10.99,totalOrders:1146,multiOrders:479,avgQty:1.0,rate:41.8},
+    {sku:'TGTGNL00004467',item:'Sojadrink zonder suikers 1L',cat:'DRINKS',brand:'Alpro',price:4.99,totalOrders:336,multiOrders:101,avgQty:1.0,rate:30.1},
+    {sku:'TGTGNL00004669',item:'Ginger Beer',cat:'DRINKS',brand:'Bundaberg',price:7.99,totalOrders:243,multiOrders:86,avgQty:1.0,rate:35.4},
+    {sku:'TGTGNL00004379',item:'Ijsthee Zero',cat:'DRINKS',brand:'Lipton',price:6.99,totalOrders:380,multiOrders:84,avgQty:1.0,rate:22.1},
+    {sku:'TGTGNL00004522',item:'This is Not Milk 1L',cat:'DRINKS',brand:'Alpro',price:6.99,totalOrders:301,multiOrders:83,avgQty:1.0,rate:27.6},
+    {sku:'TGTGNL00004486',item:'Bonbonbloc Pakket',cat:'SNACKS',brand:'Cote d\'Or',price:6.99,totalOrders:318,multiOrders:81,avgQty:1.0,rate:25.5},
+    {sku:'TGTGNL00004541',item:'Koffiecapsules Ristretto',cat:'DRINKS',brand:'L\'Or',price:11.99,totalOrders:164,multiOrders:78,avgQty:1.0,rate:47.6},
+    {sku:'TGTGNL00004600',item:'Multivit Sap',cat:'DRINKS',brand:'Roosvicee',price:7.99,totalOrders:381,multiOrders:77,avgQty:1.0,rate:20.2},
+    {sku:'TGTGNL00004307',item:'Ice Tea Peach Zero',cat:'DRINKS',brand:'Lipton',price:10.99,totalOrders:377,multiOrders:71,avgQty:1.0,rate:18.8},
+    {sku:'TGTGNL00004424',item:'Lime Cola',cat:'DRINKS',brand:'Coca-Cola',price:7.99,totalOrders:366,multiOrders:68,avgQty:1.0,rate:18.6},
+    {sku:'TGTGNL00004490',item:'Karvan Zero Pakket',cat:'DRINKS',brand:'Karvan Cevitam',price:9.99,totalOrders:316,multiOrders:63,avgQty:1.0,rate:19.9},
+    {sku:'TGTGNL00004636',item:'Koffiesiropen Geschenkset',cat:'DRINKS',brand:'Monin',price:11.99,totalOrders:355,multiOrders:60,avgQty:1.0,rate:16.9},
+    {sku:'TGTGNL00004635',item:'Mix Tonic',cat:'DRINKS',brand:'Schweppes',price:5.99,totalOrders:151,multiOrders:56,avgQty:1.0,rate:37.1},
+    {sku:'TGTGNL00004496',item:'Cruesli Pakket',cat:'BREAKFAST',brand:'Quaker',price:4.49,totalOrders:371,multiOrders:56,avgQty:1.0,rate:15.1},
+    {sku:'TGTGNL00004405',item:'Protein Shakes',cat:'HEALTH',brand:'NXT Level',price:4.99,totalOrders:239,multiOrders:56,avgQty:1.0,rate:23.4},
+    {sku:'TGTGNL00004773',item:'Chocolade',cat:'SNACKS',brand:'Cote d\'Or',price:3.99,totalOrders:149,multiOrders:55,avgQty:1.0,rate:36.9},
+    {sku:'TGTGNL00004700',item:'Organic Kattenvoer',cat:'PET FOOD',brand:'Yarrah',price:6.49,totalOrders:176,multiOrders:53,avgQty:1.0,rate:30.1},
+    {sku:'TGTGNL00004365',item:'Maiswafels Puur Chocolade',cat:'SNACKS',brand:'Zonnatura',price:7.99,totalOrders:433,multiOrders:52,avgQty:1.0,rate:12.0},
+    {sku:'TGTGNL00003954',item:'Drinkmaaltijd Chocolate',cat:'HEALTH',brand:'Yfood',price:5.49,totalOrders:136,multiOrders:50,avgQty:1.0,rate:36.8},
+    {sku:'TGTGNL00004557',item:'Karamel Chocoladerepen',cat:'SNACKS',brand:'Cote d\'Or',price:7.99,totalOrders:388,multiOrders:46,avgQty:1.0,rate:11.9},
+    {sku:'TGTGNL00004523',item:'Haverdrank',cat:'DRINKS',brand:'Alpro',price:5.99,totalOrders:229,multiOrders:46,avgQty:1.0,rate:20.1},
+    {sku:'TGTGNL00004575',item:'Chocowafel Caramel',cat:'SNACKS',brand:'Verkade',price:12.99,totalOrders:233,multiOrders:45,avgQty:1.0,rate:19.3},
+    {sku:'TGTGNL00004539',item:'Original Cookies',cat:'SNACKS',brand:'Oreo',price:7.99,totalOrders:460,multiOrders:43,avgQty:1.0,rate:9.3},
+    {sku:'TGTGNL00004389',item:'Mignonnette Double Milk',cat:'SNACKS',brand:'Cote d\'Or',price:7.99,totalOrders:231,multiOrders:42,avgQty:1.0,rate:18.2},
+    {sku:'TGTGNL00004538',item:'Fruitbiscuit Mix',cat:'SNACKS',brand:'Sultana',price:6.49,totalOrders:328,multiOrders:41,avgQty:1.0,rate:12.5},
+    {sku:'TGTGNL00004333',item:'Pinda Karamel',cat:'SNACKS',brand:'Milka',price:8.49,totalOrders:393,multiOrders:41,avgQty:1.0,rate:10.4},
+    {sku:'TGTGNL00004505',item:'Goudse Feuillets',cat:'SNACKS',brand:'Albert Menes',price:6.99,totalOrders:343,multiOrders:40,avgQty:1.0,rate:11.7},
+    {sku:'TGTGNL00004461',item:'Chocolademelk',cat:'DRINKS',brand:'Chocomel',price:11.99,totalOrders:293,multiOrders:39,avgQty:1.0,rate:13.3},
+    {sku:'TGTGNL00004520',item:'Pink Cranberry Drank',cat:'DRINKS',brand:'Ocean Spray',price:7.99,totalOrders:238,multiOrders:38,avgQty:1.0,rate:16.0},
+    {sku:'TGTGNL00004720',item:'Kattenvoer en Snacks',cat:'PET FOOD',brand:'',price:7.99,totalOrders:119,multiOrders:38,avgQty:1.0,rate:31.9},
+    {sku:'TGTGNL00004469',item:'Crunchy Muesli Mix',cat:'BREAKFAST',brand:'Holie\'s',price:7.49,totalOrders:339,multiOrders:38,avgQty:1.0,rate:11.2},
+    {sku:'TGTGNL00004554',item:'Hazelnoot Pasta',cat:'BREAKFAST',brand:'Milka',price:8.99,totalOrders:455,multiOrders:38,avgQty:1.0,rate:8.4},
+    {sku:'TGTGNL00004485',item:'Fruitbiscuit en Yofruit',cat:'SNACKS',brand:'Sultana',price:7.99,totalOrders:374,multiOrders:36,avgQty:1.0,rate:9.6},
+    {sku:'TGTGNL00004117',item:'Babyvoeding 12-15+ maanden',cat:'KIDS',brand:'Olvarit',price:4.99,totalOrders:97,multiOrders:35,avgQty:1.0,rate:36.1},
+    {sku:'TGTGNL00004410',item:'Aardappelpuree a la Minute',cat:'PANTRY',brand:'Mousline',price:4.49,totalOrders:344,multiOrders:35,avgQty:1.0,rate:10.2},
+    {sku:'TGTGNL00004406',item:'Sparkling Water',cat:'DRINKS',brand:'La Croix',price:5.49,totalOrders:96,multiOrders:35,avgQty:2.0,rate:36.5},
+    {sku:'TGTGNL00004740',item:'Fish Twist Mix',cat:'PANTRY',brand:'John West',price:5.99,totalOrders:131,multiOrders:35,avgQty:1.0,rate:26.7},
+    {sku:'TGTGNL00004492',item:'Mix Sappen',cat:'DRINKS',brand:'Versojus',price:7.99,totalOrders:191,multiOrders:35,avgQty:1.0,rate:18.3},
+    {sku:'TGTGNL00003953',item:'Drinkmaaltijd Fresh Berry',cat:'HEALTH',brand:'Yfood',price:10.49,totalOrders:152,multiOrders:35,avgQty:1.0,rate:23.0},
+    {sku:'TGTGNL00004642',item:'Bugles Nacho Cheese',cat:'SNACKS',brand:'Lay\'s',price:5.49,totalOrders:308,multiOrders:34,avgQty:1.0,rate:11.0},
+    {sku:'TGTGNL00004395',item:'Drinkmaaltijd Mix',cat:'DRINKS',brand:'Yfood',price:9.99,totalOrders:134,multiOrders:34,avgQty:1.0,rate:25.4},
+    {sku:'TGTGNL00004534',item:'Sweet & Salty Crisps',cat:'SNACKS',brand:'Popworks',price:6.49,totalOrders:167,multiOrders:32,avgQty:1.0,rate:19.2},
+    {sku:'TGTGNL00004329',item:'Overload Snackreep',cat:'SNACKS',brand:'Reese\'s',price:8.99,totalOrders:246,multiOrders:32,avgQty:1.0,rate:13.0},
+    {sku:'TGTGNL00004537',item:'Boterkoekjes',cat:'SNACKS',brand:'Becky\'s',price:8.99,totalOrders:345,multiOrders:31,avgQty:1.0,rate:9.0},
+    {sku:'TGTGNL00004400',item:'Masala Chai Drank',cat:'DRINKS',brand:'MamasChai',price:6.99,totalOrders:295,multiOrders:31,avgQty:1.0,rate:10.5},
+    {sku:'TGTGNL00004543',item:'Boba Box',cat:'DRINKS',brand:'The Inspire Food Company',price:5.99,totalOrders:180,multiOrders:30,avgQty:1.0,rate:16.7},
+    {sku:'TGTGNL00004507',item:'Popchips Box',cat:'SNACKS',brand:'Chio',price:6.99,totalOrders:322,multiOrders:30,avgQty:1.0,rate:9.3},
+    {sku:'TGTGNL00004387',item:'Party Mix',cat:'SNACKS',brand:'Milka',price:9.99,totalOrders:372,multiOrders:29,avgQty:1.0,rate:7.8},
+    {sku:'TGTGNL00004608',item:'Crunchy Muesli Mix',cat:'BREAKFAST',brand:'Holie\'s',price:7.49,totalOrders:282,multiOrders:29,avgQty:1.0,rate:10.3},
+    {sku:'TGTGNL00004603',item:'Koekjes Doos',cat:'SNACKS',brand:'PiCK UP!',price:7.99,totalOrders:182,multiOrders:28,avgQty:1.0,rate:15.4},
+  ],
+  '2025-12': [
+    {sku:'TGTGNL00004883',item:'Adventskalender',cat:'SEASONAL',brand:'Tony\'s Chocolonely',price:7.49,totalOrders:552,multiOrders:208,avgQty:1.0,rate:37.7},
+    {sku:'TGTGNL00004775',item:'Cola Lime',cat:'DRINKS',brand:'Coca-Cola',price:3.99,totalOrders:512,multiOrders:162,avgQty:1.0,rate:31.6},
+    {sku:'TGTGNL00004669',item:'Ginger Beer',cat:'DRINKS',brand:'Bundaberg',price:2.49,totalOrders:320,multiOrders:156,avgQty:2.0,rate:48.8},
+    {sku:'TGTGNL00004601',item:'Non Alcoholic Winter IPA',cat:'DRINKS',brand:'Lowlander',price:7.99,totalOrders:676,multiOrders:154,avgQty:1.0,rate:22.8},
+    {sku:'TGTGNL00004923',item:'0% Bier',cat:'DRINKS',brand:'Birra Moretti',price:3.99,totalOrders:323,multiOrders:121,avgQty:1.0,rate:37.5},
+    {sku:'TGTGNL00004795',item:'Ice Tea Peach',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:321,multiOrders:108,avgQty:1.0,rate:33.6},
+    {sku:'TGTGNL00004606',item:'Thee Adventskalender',cat:'SEASONAL',brand:'Pukka',price:10.99,totalOrders:483,multiOrders:102,avgQty:1.0,rate:21.1},
+    {sku:'TGTGNL00004717',item:'This is Not Milk 1L',cat:'DRINKS',brand:'Alpro',price:5.99,totalOrders:233,multiOrders:99,avgQty:2.0,rate:42.5},
+    {sku:'TGTGNL00004708',item:'Multivit Sap',cat:'DRINKS',brand:'Roosvicee',price:7.49,totalOrders:399,multiOrders:91,avgQty:1.0,rate:22.8},
+    {sku:'TGTGNL00004783',item:'Ice Tea Green Zero',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:209,multiOrders:80,avgQty:1.0,rate:38.3},
+    {sku:'TGTGNL00004635',item:'Mix Tonic',cat:'DRINKS',brand:'Schweppes',price:2.49,totalOrders:206,multiOrders:77,avgQty:1.0,rate:37.4},
+    {sku:'TGTGNL00004768',item:'Fruit Drinks 1Kcal',cat:'DRINKS',brand:'Dubbelfrisss',price:6.99,totalOrders:292,multiOrders:76,avgQty:1.0,rate:26.0},
+    {sku:'TGTGNL00004718',item:'Mix Choco Pakket',cat:'SNACKS',brand:'Milka',price:5.49,totalOrders:496,multiOrders:75,avgQty:1.0,rate:15.1},
+    {sku:'TGTGNL00004924',item:'Framboos Cider 0.0%',cat:'DRINKS',brand:'Appel Bandit',price:4.49,totalOrders:244,multiOrders:75,avgQty:1.0,rate:30.7},
+    {sku:'TGTGNL00004756',item:'Kombucha BIO Mix',cat:'DRINKS',brand:'Gutsy Captain',price:3.99,totalOrders:260,multiOrders:74,avgQty:1.0,rate:28.5},
+    {sku:'TGTGNL00004784',item:'Ice Tea Green Lemon',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:235,multiOrders:72,avgQty:1.0,rate:30.6},
+    {sku:'TGTGNL00004754',item:'Italian Style Focaccia',cat:'SNACKS',brand:'Pringles',price:2.99,totalOrders:401,multiOrders:72,avgQty:1.0,rate:18.0},
+    {sku:'TGTGNL00004871',item:'Kerstmokken Giftset',cat:'SEASONAL',brand:'Becky\'s',price:3.49,totalOrders:161,multiOrders:72,avgQty:1.0,rate:44.7},
+    {sku:'TGTGNL00004770',item:'Koekjes en Cakejes',cat:'SNACKS',brand:'Oreo',price:5.49,totalOrders:457,multiOrders:70,avgQty:1.0,rate:15.3},
+    {sku:'TGTGNL00004530',item:'Drinkmaaltijd Chocolate',cat:'HEALTH',brand:'Yfood',price:3.99,totalOrders:181,multiOrders:70,avgQty:1.0,rate:38.7},
+    {sku:'TGTGNL00004489',item:'Ijsthee Zero',cat:'DRINKS',brand:'Lipton',price:6.99,totalOrders:306,multiOrders:69,avgQty:1.0,rate:22.5},
+    {sku:'TGTGNL00004387',item:'Party Mix',cat:'SNACKS',brand:'Milka',price:9.99,totalOrders:624,multiOrders:67,avgQty:1.0,rate:10.7},
+    {sku:'TGTGNL00004798',item:'Bonbonbloc',cat:'SNACKS',brand:'Cote d\'Or',price:6.99,totalOrders:406,multiOrders:65,avgQty:1.0,rate:16.0},
+    {sku:'TGTGNL00004755',item:'Kombucha BIO Framboos',cat:'DRINKS',brand:'Gutsy Captain',price:4.99,totalOrders:279,multiOrders:60,avgQty:1.0,rate:21.5},
+    {sku:'TGTGNL00004668',item:'Mix Chocolade',cat:'SNACKS',brand:'Cote d\'Or',price:8.49,totalOrders:407,multiOrders:57,avgQty:1.0,rate:14.0},
+    {sku:'TGTGNL00004928',item:'Winter Mokken met Chocolade',cat:'SEASONAL',brand:'Becky\'s',price:3.49,totalOrders:133,multiOrders:57,avgQty:1.0,rate:42.9},
+    {sku:'TGTGNL00004773',item:'Chocolade',cat:'SNACKS',brand:'Cote d\'Or',price:3.99,totalOrders:150,multiOrders:56,avgQty:1.0,rate:37.3},
+    {sku:'TGTGNL00004602',item:'Snackpakket',cat:'SNACKS',brand:'Duyvis',price:3.99,totalOrders:421,multiOrders:56,avgQty:1.0,rate:13.3},
+    {sku:'TGTGNL00004799',item:'Cuisine in Saus Kuipje Hond',cat:'PET FOOD',brand:'',price:3.99,totalOrders:123,multiOrders:55,avgQty:2.0,rate:44.7},
+    {sku:'TGTGNL00004716',item:'Vruchthensappen Mix',cat:'DRINKS',brand:'',price:4.99,totalOrders:319,multiOrders:54,avgQty:1.0,rate:16.9},
+    {sku:'TGTGNL00004778',item:'Vegetarische Erwtensoep',cat:'PANTRY',brand:'Unox',price:5.49,totalOrders:265,multiOrders:54,avgQty:1.0,rate:20.4},
+    {sku:'TGTGNL00004884',item:'Kerstmokken en Snoep',cat:'SEASONAL',brand:'Becky\'s',price:5.99,totalOrders:259,multiOrders:51,avgQty:1.0,rate:19.7},
+    {sku:'TGTGNL00004790',item:'Wijngums Gift Box',cat:'SEASONAL',brand:'Wally & Whiz',price:12.99,totalOrders:353,multiOrders:51,avgQty:1.0,rate:14.4},
+    {sku:'TGTGNL00004637',item:'Peach Ice Tea',cat:'DRINKS',brand:'Arizona',price:6.49,totalOrders:282,multiOrders:50,avgQty:1.0,rate:17.7},
+    {sku:'TGTGNL00004927',item:'Hot Choco Mokken',cat:'SEASONAL',brand:'Becky\'s',price:4.49,totalOrders:164,multiOrders:50,avgQty:1.0,rate:30.5},
+    {sku:'TGTGNL00004757',item:'Drinkmaaltijd',cat:'HEALTH',brand:'Barebells',price:5.99,totalOrders:177,multiOrders:49,avgQty:1.0,rate:27.7},
+    {sku:'TGTGNL00004753',item:'Maaltijden 6-10+',cat:'KIDS',brand:'Ella\'s Kitchen',price:7.99,totalOrders:129,multiOrders:48,avgQty:1.0,rate:37.2},
+    {sku:'TGTGNL00004961',item:'Vlokken Puur en Wit',cat:'BREAKFAST',brand:'De Ruijter',price:6.49,totalOrders:324,multiOrders:48,avgQty:1.0,rate:14.8},
+    {sku:'TGTGNL00004715',item:'Mix Tonic',cat:'DRINKS',brand:'Schweppes',price:1.99,totalOrders:147,multiOrders:45,avgQty:1.0,rate:30.6},
+    {sku:'TGTGNL00004467',item:'Sojadrink zonder suikers 1L',cat:'DRINKS',brand:'Alpro',price:4.99,totalOrders:104,multiOrders:45,avgQty:1.0,rate:43.3},
+    {sku:'TGTGNL00004553',item:'Protein Water',cat:'HEALTH',brand:'NXT Level',price:4.99,totalOrders:259,multiOrders:44,avgQty:1.0,rate:17.0},
+    {sku:'TGTGNL00004826',item:'Ice Tea Sparkling 500ml',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:183,multiOrders:43,avgQty:1.0,rate:23.5},
+    {sku:'TGTGNL00004776',item:'Barista Iced Koffie',cat:'DRINKS',brand:'Oatly',price:7.99,totalOrders:264,multiOrders:42,avgQty:1.0,rate:15.9},
+    {sku:'TGTGNL00004567',item:'Zero Aardbei',cat:'DRINKS',brand:'Karvan Cevitam',price:9.99,totalOrders:218,multiOrders:42,avgQty:1.0,rate:19.3},
+    {sku:'TGTGNL00004777',item:'Echte Mayonaise',cat:'PANTRY',brand:'Calve',price:3.49,totalOrders:302,multiOrders:41,avgQty:1.0,rate:13.6},
+    {sku:'TGTGNL00004868',item:'0% Suiker Toegevoegd',cat:'DRINKS',brand:'Chocomel',price:5.49,totalOrders:101,multiOrders:40,avgQty:1.0,rate:39.6},
+    {sku:'TGTGNL00004873',item:'Heartbreakers',cat:'SNACKS',brand:'Chio',price:3.99,totalOrders:141,multiOrders:40,avgQty:1.0,rate:28.4},
+    {sku:'TGTGNL00004794',item:'Appelmoes',cat:'PANTRY',brand:'HAK',price:3.49,totalOrders:207,multiOrders:38,avgQty:1.0,rate:18.4},
+    {sku:'TGTGNL00004537',item:'Boterkoekjes',cat:'SNACKS',brand:'Becky\'s',price:8.99,totalOrders:351,multiOrders:38,avgQty:1.0,rate:10.8},
+    {sku:'TGTGNL00004699',item:'Kattenvoer',cat:'PET FOOD',brand:'Lily\'s Kitchen',price:3.99,totalOrders:182,multiOrders:37,avgQty:1.0,rate:20.3},
+  ],
+  '2026-01': [
+    {sku:'TGTGNL00004868',item:'0% Suiker Toegevoegd',cat:'DRINKS',brand:'Chocomel',price:5.49,totalOrders:1045,multiOrders:358,avgQty:1.0,rate:34.3},
+    {sku:'TGTGNL00004923',item:'0% Bier',cat:'DRINKS',brand:'Birra Moretti',price:3.99,totalOrders:677,multiOrders:290,avgQty:1.0,rate:42.8},
+    {sku:'TGTGNL00004754',item:'Italian Style Focaccia',cat:'SNACKS',brand:'Pringles',price:2.99,totalOrders:1264,multiOrders:176,avgQty:1.0,rate:13.9},
+    {sku:'TGTGNL00005012',item:'Ice Tea Peach',cat:'DRINKS',brand:'Lipton',price:2.99,totalOrders:292,multiOrders:152,avgQty:2.0,rate:52.1},
+    {sku:'TGTGNL00004775',item:'Cola Lime',cat:'DRINKS',brand:'Coca-Cola',price:3.99,totalOrders:442,multiOrders:152,avgQty:1.0,rate:34.4},
+    {sku:'TGTGNL00005061',item:'Ice Tea Green Zero',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:387,multiOrders:145,avgQty:1.0,rate:37.5},
+    {sku:'TGTGNL00005062',item:'Ice Tea Green Lemon',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:436,multiOrders:144,avgQty:1.0,rate:33.0},
+    {sku:'TGTGNL00005011',item:'Original en Cakejes',cat:'SNACKS',brand:'Oreo',price:6.49,totalOrders:475,multiOrders:118,avgQty:1.0,rate:24.8},
+    {sku:'TGTGNL00004530',item:'Drinkmaaltijd Chocolate',cat:'HEALTH',brand:'Yfood',price:3.99,totalOrders:291,multiOrders:114,avgQty:1.0,rate:39.2},
+    {sku:'TGTGNL00005116',item:'Ice Tea Peach',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:351,multiOrders:114,avgQty:1.0,rate:32.5},
+    {sku:'TGTGNL00005095',item:'1+ Vis Selectie Multipack',cat:'PET FOOD',brand:'Whiskas',price:4.99,totalOrders:202,multiOrders:113,avgQty:2.0,rate:55.9},
+    {sku:'TGTGNL00004924',item:'Framboos Cider 0.0%',cat:'DRINKS',brand:'Appel Bandit',price:4.49,totalOrders:513,multiOrders:113,avgQty:1.0,rate:22.0},
+    {sku:'TGTGNL00004963',item:'Kombucha BIO Mix',cat:'DRINKS',brand:'Gutsy Captain',price:3.49,totalOrders:283,multiOrders:106,avgQty:1.0,rate:37.5},
+    {sku:'TGTGNL00004943',item:'Melk Chocolade',cat:'SNACKS',brand:'Cote d\'Or',price:4.99,totalOrders:312,multiOrders:105,avgQty:1.0,rate:33.7},
+    {sku:'TGTGNL00004529',item:'Fresh Berry Drinkmaaltijd',cat:'HEALTH',brand:'Yfood',price:5.99,totalOrders:330,multiOrders:105,avgQty:1.0,rate:31.8},
+    {sku:'TGTGNL00005084',item:'Mixpakket',cat:'HEALTH',brand:'Vitamin Well',price:5.99,totalOrders:288,multiOrders:94,avgQty:1.0,rate:32.6},
+    {sku:'TGTGNL00004872',item:'Popchips',cat:'SNACKS',brand:'Chio',price:1.99,totalOrders:405,multiOrders:90,avgQty:1.0,rate:22.2},
+    {sku:'TGTGNL00005032',item:'Kombucha BIO Mix',cat:'DRINKS',brand:'Gutsy Captain',price:3.99,totalOrders:285,multiOrders:89,avgQty:1.0,rate:31.2},
+    {sku:'TGTGNL00004930',item:'Dubai Chocolade Crunchy Bar',cat:'SNACKS',brand:'',price:2.99,totalOrders:328,multiOrders:89,avgQty:1.0,rate:27.1},
+    {sku:'TGTGNL00004661',item:'Thee Selection Box',cat:'DRINKS',brand:'Pukka',price:14.99,totalOrders:481,multiOrders:87,avgQty:1.0,rate:18.1},
+    {sku:'TGTGNL00005031',item:'Sparkling Drankjes',cat:'DRINKS',brand:'Chupa Chups',price:1.99,totalOrders:217,multiOrders:86,avgQty:2.0,rate:39.6},
+    {sku:'TGTGNL00005030',item:'Mix Sappen',cat:'DRINKS',brand:'',price:2.99,totalOrders:310,multiOrders:82,avgQty:1.0,rate:26.5},
+    {sku:'TGTGNL00004974',item:'Mixpakket',cat:'HEALTH',brand:'Vitamin Well',price:5.99,totalOrders:227,multiOrders:79,avgQty:1.0,rate:34.8},
+    {sku:'TGTGNL00005063',item:'Green Tea Zero 1.5l',cat:'DRINKS',brand:'Lipton',price:2.49,totalOrders:152,multiOrders:78,avgQty:3.0,rate:51.3},
+    {sku:'TGTGNL00004944',item:'Hazelnoot Melk Chocolade',cat:'SNACKS',brand:'Cote d\'Or',price:4.99,totalOrders:383,multiOrders:76,avgQty:1.0,rate:19.8},
+    {sku:'TGTGNL00004973',item:'Proteinrepen',cat:'HEALTH',brand:'Barebells',price:6.99,totalOrders:239,multiOrders:75,avgQty:1.0,rate:31.4},
+    {sku:'TGTGNL00004989',item:'Multivit Sap',cat:'DRINKS',brand:'Roosvicee',price:5.49,totalOrders:331,multiOrders:73,avgQty:1.0,rate:22.1},
+    {sku:'TGTGNL00004962',item:'Milkshake Drankje',cat:'DRINKS',brand:'Maltesers',price:2.49,totalOrders:318,multiOrders:71,avgQty:1.0,rate:22.3},
+    {sku:'TGTGNL00005066',item:'Ginger Beer',cat:'DRINKS',brand:'Bundaberg',price:1.99,totalOrders:131,multiOrders:69,avgQty:2.0,rate:52.7},
+    {sku:'TGTGNL00004929',item:'Bloemen Mokken Hot Choco',cat:'SEASONAL',brand:'Becky\'s',price:3.49,totalOrders:222,multiOrders:67,avgQty:1.0,rate:30.2},
+    {sku:'TGTGNL00004964',item:'Lemonade Mix',cat:'DRINKS',brand:'Calypso',price:3.99,totalOrders:210,multiOrders:65,avgQty:1.0,rate:31.0},
+    {sku:'TGTGNL00005081',item:'Frisdrankjes 1Kcal',cat:'DRINKS',brand:'Dubbelfrisss',price:6.99,totalOrders:314,multiOrders:65,avgQty:1.0,rate:20.7},
+    {sku:'TGTGNL00005000',item:'Fast Food Drinkmaaltijd',cat:'HEALTH',brand:'Barebells',price:6.99,totalOrders:252,multiOrders:63,avgQty:1.0,rate:25.0},
+    {sku:'TGTGNL00004819',item:'Chocolademelk 200ml',cat:'DRINKS',brand:'Chocomel',price:6.99,totalOrders:317,multiOrders:63,avgQty:1.0,rate:19.9},
+    {sku:'TGTGNL00005036',item:'Lijnzaadcrackers Less Carb',cat:'SNACKS',brand:'Smaakt',price:4.49,totalOrders:254,multiOrders:63,avgQty:1.0,rate:24.8},
+    {sku:'TGTGNL00005086',item:'Koffiesiropen Geschenkset',cat:'DRINKS',brand:'Monin',price:3.99,totalOrders:299,multiOrders:63,avgQty:1.0,rate:21.1},
+    {sku:'TGTGNL00005103',item:'Proteinrepen',cat:'HEALTH',brand:'Barebells',price:6.99,totalOrders:181,multiOrders:62,avgQty:1.0,rate:34.3},
+    {sku:'TGTGNL00005069',item:'Muesli Mix Pakket',cat:'BREAKFAST',brand:'Zonnatura',price:6.49,totalOrders:240,multiOrders:59,avgQty:1.0,rate:24.6},
+    {sku:'TGTGNL00005065',item:'0% Framboos',cat:'DRINKS',brand:'Karvan Cevitam',price:4.49,totalOrders:273,multiOrders:58,avgQty:1.0,rate:21.2},
+    {sku:'TGTGNL00004975',item:'1+ Vis Selectie Multipack',cat:'PET FOOD',brand:'Whiskas',price:5.99,totalOrders:107,multiOrders:58,avgQty:2.0,rate:54.2},
+    {sku:'TGTGNL00005044',item:'Heartbreakers',cat:'SNACKS',brand:'Chio',price:3.49,totalOrders:319,multiOrders:57,avgQty:1.0,rate:17.9},
+    {sku:'TGTGNL00004903',item:'English Smoky Barbecue',cat:'SNACKS',brand:'Tyrrells',price:2.99,totalOrders:278,multiOrders:56,avgQty:1.0,rate:20.1},
+    {sku:'TGTGNL00005040',item:'Haverdrank',cat:'DRINKS',brand:'Alpro',price:6.49,totalOrders:151,multiOrders:54,avgQty:1.0,rate:35.8},
+    {sku:'TGTGNL00005112',item:'Haverdrink Barista 1L',cat:'DRINKS',brand:'Califia Farms',price:2.99,totalOrders:180,multiOrders:53,avgQty:1.0,rate:29.4},
+    {sku:'TGTGNL00004387',item:'Party Mix',cat:'SNACKS',brand:'Milka',price:7.99,totalOrders:534,multiOrders:53,avgQty:1.0,rate:9.9},
+    {sku:'TGTGNL00004860',item:'Sinterklaas Chocolade',cat:'SNACKS',brand:'Happy Sweets',price:5.99,totalOrders:254,multiOrders:52,avgQty:1.0,rate:20.5},
+    {sku:'TGTGNL00004798',item:'Bonbonbloc',cat:'SNACKS',brand:'Cote d\'Or',price:6.99,totalOrders:267,multiOrders:52,avgQty:1.0,rate:19.5},
+    {sku:'TGTGNL00004987',item:'Haverdrink Barista 1L',cat:'DRINKS',brand:'Califia Farms',price:2.99,totalOrders:95,multiOrders:51,avgQty:2.0,rate:53.7},
+    {sku:'TGTGNL00005075',item:'Hagelslag en Vlokken',cat:'BREAKFAST',brand:'De Ruijter',price:7.49,totalOrders:523,multiOrders:51,avgQty:1.0,rate:9.8},
+    {sku:'TGTGNL00004901',item:'Ovensticks',cat:'SNACKS',brand:'Chio',price:3.49,totalOrders:435,multiOrders:50,avgQty:1.0,rate:11.5},
+  ],
+  '2026-02': [
+    {sku:'TGTGNL00005129',item:'Ice Tea Green Zero',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:501,multiOrders:249,avgQty:1.0,rate:49.7},
+    {sku:'TGTGNL00004924',item:'Framboos Cider 0.0%',cat:'DRINKS',brand:'Appel Bandit',price:3.99,totalOrders:552,multiOrders:170,avgQty:1.0,rate:30.8},
+    {sku:'TGTGNL00005241',item:'Sojadrink zonder suikers 1L',cat:'DRINKS',brand:'Alpro',price:8.99,totalOrders:457,multiOrders:139,avgQty:1.0,rate:30.4},
+    {sku:'TGTGNL00005206',item:'Ice Tea Peach XL',cat:'DRINKS',brand:'Lipton',price:9.99,totalOrders:506,multiOrders:124,avgQty:1.0,rate:24.5},
+    {sku:'TGTGNL00005155',item:'Ice Tea Green Zero',cat:'DRINKS',brand:'Lipton',price:4.49,totalOrders:465,multiOrders:113,avgQty:1.0,rate:24.3},
+    {sku:'TGTGNL00005116',item:'Ice Tea Peach',cat:'DRINKS',brand:'Lipton',price:3.99,totalOrders:238,multiOrders:96,avgQty:1.0,rate:40.3},
+    {sku:'TGTGNL00005136',item:'Sojadrink zonder suikers 1L',cat:'DRINKS',brand:'Alpro',price:8.99,totalOrders:270,multiOrders:80,avgQty:1.0,rate:29.6},
+    {sku:'TGTGNL00005312',item:'Barista Oat',cat:'DRINKS',brand:'Alpro',price:5.99,totalOrders:184,multiOrders:79,avgQty:1.0,rate:42.9},
+    {sku:'TGTGNL00005076',item:'Mix Chocolade',cat:'SNACKS',brand:'Milka',price:5.99,totalOrders:337,multiOrders:78,avgQty:1.0,rate:23.1},
+    {sku:'TGTGNL00005123',item:'Bonbonbloc Mix',cat:'SNACKS',brand:'Cote d\'Or',price:8.99,totalOrders:401,multiOrders:75,avgQty:1.0,rate:18.7},
+    {sku:'TGTGNL00005186',item:'Milkshake Drankjes',cat:'DRINKS',brand:'',price:3.49,totalOrders:239,multiOrders:69,avgQty:1.0,rate:28.9},
+    {sku:'TGTGNL00005144',item:'1+ Vis Selectie Multipack',cat:'PET FOOD',brand:'Whiskas',price:5.99,totalOrders:143,multiOrders:68,avgQty:1.0,rate:47.6},
+    {sku:'TGTGNL00005146',item:'Bio Chocolade',cat:'SNACKS',brand:'Lovechock',price:10.49,totalOrders:401,multiOrders:68,avgQty:1.0,rate:17.0},
+    {sku:'TGTGNL00005001',item:'Mix Koekjes',cat:'SNACKS',brand:'Verkade',price:5.99,totalOrders:372,multiOrders:68,avgQty:1.0,rate:18.3},
+    {sku:'TGTGNL00005161',item:'Cola Lime',cat:'DRINKS',brand:'Coca-Cola',price:5.99,totalOrders:285,multiOrders:66,avgQty:1.0,rate:23.2},
+    {sku:'TGTGNL00005145',item:'Organic Kattenvoer Kip',cat:'PET FOOD',brand:'Yarrah',price:5.99,totalOrders:224,multiOrders:63,avgQty:1.0,rate:28.1},
+    {sku:'TGTGNL00005244',item:'Vitaminedrank XL',cat:'DRINKS',brand:'Vitamin Well',price:10.99,totalOrders:297,multiOrders:61,avgQty:1.0,rate:20.5},
+    {sku:'TGTGNL00005218',item:'Koekjes',cat:'SNACKS',brand:'PiCK UP!',price:3.99,totalOrders:212,multiOrders:60,avgQty:1.0,rate:28.3},
+    {sku:'TGTGNL00005121',item:'Fast Food Drinkmaaltijd',cat:'HEALTH',brand:'Barebells',price:7.49,totalOrders:162,multiOrders:59,avgQty:1.0,rate:36.4},
+    {sku:'TGTGNL00005124',item:'Strawberry Yoghurt',cat:'SNACKS',brand:'Milka',price:6.99,totalOrders:360,multiOrders:58,avgQty:1.0,rate:16.1},
+    {sku:'TGTGNL00005154',item:'Ice Tea Sparkling',cat:'DRINKS',brand:'Lipton',price:10.99,totalOrders:594,multiOrders:58,avgQty:1.0,rate:9.8},
+    {sku:'TGTGNL00005160',item:'Classics Pate met Vis',cat:'PET FOOD',brand:'Sheba',price:8.99,totalOrders:302,multiOrders:58,avgQty:1.0,rate:19.2},
+    {sku:'TGTGNL00005199',item:'Proteinrepen XL',cat:'HEALTH',brand:'Barebells',price:14.49,totalOrders:301,multiOrders:56,avgQty:1.0,rate:18.6},
+    {sku:'TGTGNL00005126',item:'Sparkling Drankjes',cat:'DRINKS',brand:'Chupa Chups',price:1.99,totalOrders:98,multiOrders:55,avgQty:4.0,rate:56.1},
+    {sku:'TGTGNL00004819',item:'Chocolademelk 200ml',cat:'DRINKS',brand:'Chocomel',price:2.99,totalOrders:138,multiOrders:55,avgQty:1.0,rate:39.9},
+    {sku:'TGTGNL00005215',item:'Haverrijst Minuutje',cat:'PANTRY',brand:'Lassie',price:1.99,totalOrders:181,multiOrders:53,avgQty:1.0,rate:29.3},
+    {sku:'TGTGNL00005210',item:'Heartbreakers',cat:'SNACKS',brand:'Chio',price:4.49,totalOrders:290,multiOrders:53,avgQty:1.0,rate:18.3},
+    {sku:'TGTGNL00005245',item:'0% Suiker Toegevoegd',cat:'DRINKS',brand:'Chocomel',price:9.99,totalOrders:377,multiOrders:52,avgQty:1.0,rate:13.8},
+    {sku:'TGTGNL00005207',item:'Melk Hazelnoot Caramel XL',cat:'SNACKS',brand:'Cote d\'Or',price:14.99,totalOrders:536,multiOrders:52,avgQty:1.0,rate:9.7},
+    {sku:'TGTGNL00005174',item:'Fruit Drinks',cat:'DRINKS',brand:'DubbelFrisss',price:5.99,totalOrders:242,multiOrders:51,avgQty:1.0,rate:21.1},
+    {sku:'TGTGNL00005214',item:'Kombucha BIO XL',cat:'DRINKS',brand:'GUTsy Captain',price:8.49,totalOrders:253,multiOrders:51,avgQty:1.0,rate:20.2},
+    {sku:'TGTGNL00005157',item:'Orange Lemon Water',cat:'DRINKS',brand:'Active O2',price:4.49,totalOrders:154,multiOrders:49,avgQty:1.0,rate:31.8},
+    {sku:'TGTGNL00005193',item:'Tropical & Peach',cat:'DRINKS',brand:'Karvan Cevitam',price:12.99,totalOrders:340,multiOrders:48,avgQty:1.0,rate:14.1},
+    {sku:'TGTGNL00005240',item:'Cola Lime XL',cat:'DRINKS',brand:'Coca-Cola',price:11.99,totalOrders:282,multiOrders:46,avgQty:1.0,rate:16.3},
+    {sku:'TGTGNL00005320',item:'Dessert Vanille',cat:'BREAKFAST',brand:'Alpro',price:4.49,totalOrders:172,multiOrders:46,avgQty:1.0,rate:26.7},
+    {sku:'TGTGNL00005112',item:'Haverdrink Barista 1L',cat:'DRINKS',brand:'Califia Farms',price:2.99,totalOrders:160,multiOrders:45,avgQty:1.0,rate:28.1},
+    {sku:'TGTGNL00005120',item:'Fruitrepen',cat:'KIDS',brand:'Peppa Pig',price:3.49,totalOrders:204,multiOrders:44,avgQty:1.0,rate:21.6},
+    {sku:'TGTGNL00005122',item:'Popchips',cat:'SNACKS',brand:'Chio',price:4.99,totalOrders:443,multiOrders:44,avgQty:1.0,rate:9.9},
+    {sku:'TGTGNL00004988',item:'Notenrepen',cat:'SNACKS',brand:'Zonnatura',price:6.99,totalOrders:332,multiOrders:44,avgQty:1.0,rate:13.3},
+    {sku:'TGTGNL00005150',item:'Glutenvrij Koekjes',cat:'SNACKS',brand:'',price:5.49,totalOrders:287,multiOrders:44,avgQty:1.0,rate:15.3},
+    {sku:'TGTGNL00005135',item:'Frisdrankjes met Kokosjelly',cat:'DRINKS',brand:'',price:3.99,totalOrders:174,multiOrders:43,avgQty:1.0,rate:24.7},
+    {sku:'TGTGNL00005127',item:'Maïswafel Chocolade',cat:'SNACKS',brand:'Zonnatura',price:9.99,totalOrders:448,multiOrders:40,avgQty:1.0,rate:8.9},
+    {sku:'TGTGNL00004364',item:'Jasmin & White Peach',cat:'DRINKS',brand:'HI-FIVE',price:3.99,totalOrders:254,multiOrders:40,avgQty:1.0,rate:15.7},
+    {sku:'TGTGNL00005235',item:'Hummus en Linzen Chips',cat:'SNACKS',brand:'Eat Real',price:2.99,totalOrders:307,multiOrders:40,avgQty:1.0,rate:13.0},
+    {sku:'TGTGNL00005202',item:'Wereldgerecht Mix',cat:'MEALS',brand:'Knorr',price:4.99,totalOrders:241,multiOrders:39,avgQty:1.0,rate:16.2},
+    {sku:'TGTGNL00004935',item:'Babyvoeding 6-10m+',cat:'KIDS',brand:'Ella\'s Kitchen',price:2.99,totalOrders:88,multiOrders:39,avgQty:1.0,rate:44.3},
+    {sku:'TGTGNL00005156',item:'Vlokken en Hagelslag',cat:'BREAKFAST',brand:'De Ruijter',price:7.49,totalOrders:340,multiOrders:38,avgQty:1.0,rate:11.2},
+    {sku:'TGTGNL00004862',item:'Fish Twist Curry Tonijn',cat:'PANTRY',brand:'John West',price:3.49,totalOrders:177,multiOrders:37,avgQty:1.0,rate:20.9},
+    {sku:'TGTGNL00005216',item:'Mayonaise 300ml',cat:'PANTRY',brand:'Devos & Lemmens',price:2.99,totalOrders:245,multiOrders:37,avgQty:1.0,rate:15.1},
+    {sku:'TGTGNL00005037',item:'Choco Nougat',cat:'SNACKS',brand:'Happy Sweets',price:3.99,totalOrders:256,multiOrders:37,avgQty:1.0,rate:14.5},
+  ],
+  '2026-03': [
+    {sku:'TGTGNL00005306',item:'Ice Tea Peach XL',cat:'DRINKS',brand:'Lipton',price:9.99,totalOrders:496,multiOrders:106,avgQty:1.0,rate:21.4},
+    {sku:'TGTGNL00005601',item:'Ice Tea Peach XL',cat:'DRINKS',brand:'Lipton',price:9.99,totalOrders:406,multiOrders:100,avgQty:1.0,rate:24.6},
+    {sku:'TGTGNL00005355',item:'Orange Lemon Water',cat:'DRINKS',brand:'Active O2',price:4.49,totalOrders:456,multiOrders:100,avgQty:1.0,rate:21.9},
+    {sku:'TGTGNL00005352',item:'Vitaminedrank XL',cat:'DRINKS',brand:'Vitamin Well',price:9.99,totalOrders:418,multiOrders:98,avgQty:1.0,rate:23.4},
+    {sku:'TGTGNL00005443',item:'Proteinrepen XL',cat:'HEALTH',brand:'Barebells',price:12.49,totalOrders:229,multiOrders:93,avgQty:1.0,rate:40.6},
+    {sku:'TGTGNL00005410',item:'Haverdrank',cat:'DRINKS',brand:'Alpro',price:8.49,totalOrders:379,multiOrders:78,avgQty:1.0,rate:20.6},
+    {sku:'TGTGNL00005419',item:'Stroopwafels Original',cat:'SNACKS',brand:'Kanjers',price:6.99,totalOrders:465,multiOrders:75,avgQty:1.0,rate:16.1},
+    {sku:'TGTGNL00005307',item:'Sparkling Drankjes',cat:'DRINKS',brand:'Chupa Chups',price:4.99,totalOrders:312,multiOrders:72,avgQty:1.0,rate:23.1},
+    {sku:'TGTGNL00005389',item:'Haverrijst Minuutje',cat:'PANTRY',brand:'Lassie',price:1.99,totalOrders:226,multiOrders:70,avgQty:1.0,rate:31.0},
+    {sku:'TGTGNL00005441',item:'Vegan Chocolade',cat:'SNACKS',brand:'Hands Off',price:4.99,totalOrders:465,multiOrders:66,avgQty:1.0,rate:14.2},
+    {sku:'TGTGNL00005526',item:'Honey BBQ Bits',cat:'SNACKS',brand:'Doritos',price:3.99,totalOrders:334,multiOrders:65,avgQty:1.0,rate:19.5},
+    {sku:'TGTGNL00005361',item:'Honey BBQ Bits',cat:'SNACKS',brand:'Doritos',price:3.99,totalOrders:322,multiOrders:61,avgQty:1.0,rate:18.9},
+    {sku:'TGTGNL00005343',item:'Green Tea Zero 1.5L',cat:'DRINKS',brand:'Lipton',price:9.99,totalOrders:310,multiOrders:60,avgQty:1.0,rate:19.4},
+    {sku:'TGTGNL00005336',item:'Gevulde Koekjes',cat:'SNACKS',brand:'PiCK UP!',price:6.99,totalOrders:416,multiOrders:55,avgQty:1.0,rate:13.2},
+    {sku:'TGTGNL00005467',item:'Double Chocolate Cookies',cat:'SNACKS',brand:'Hands Off',price:2.99,totalOrders:271,multiOrders:53,avgQty:1.0,rate:19.6},
+    {sku:'TGTGNL00005465',item:'Amandelpasta Wit',cat:'BREAKFAST',brand:'Terrasana',price:6.99,totalOrders:339,multiOrders:52,avgQty:1.0,rate:15.3},
+    {sku:'TGTGNL00005423',item:'Iced Koffie',cat:'DRINKS',brand:'Carlito\'s',price:6.99,totalOrders:327,multiOrders:52,avgQty:1.0,rate:15.9},
+    {sku:'TGTGNL00005429',item:'Ice Tea Green Lemon',cat:'DRINKS',brand:'Lipton',price:7.99,totalOrders:298,multiOrders:50,avgQty:1.0,rate:16.8},
+    {sku:'TGTGNL00005497',item:'Aardbei 900ml',cat:'DRINKS',brand:'Karvan Cevitam',price:6.49,totalOrders:152,multiOrders:50,avgQty:1.0,rate:32.9},
+    {sku:'TGTGNL00005417',item:'Vers Gestoomde Maaltijd Hond',cat:'PET FOOD',brand:'Smolke',price:17.99,totalOrders:162,multiOrders:50,avgQty:1.0,rate:30.9},
+    {sku:'TGTGNL00005365',item:'Cola Lime XL',cat:'DRINKS',brand:'Coca-Cola',price:11.99,totalOrders:302,multiOrders:50,avgQty:1.0,rate:16.6},
+    {sku:'TGTGNL00005595',item:'Hagel en Vlokken',cat:'BREAKFAST',brand:'De Ruijter',price:6.49,totalOrders:387,multiOrders:46,avgQty:1.0,rate:11.9},
+    {sku:'TGTGNL00005535',item:'Ginger Beer 200ml',cat:'DRINKS',brand:'Bundaberg',price:8.99,totalOrders:233,multiOrders:46,avgQty:1.0,rate:19.7},
+    {sku:'TGTGNL00005448',item:'Cassis Zero',cat:'DRINKS',brand:'Hero',price:4.99,totalOrders:236,multiOrders:45,avgQty:1.0,rate:19.1},
+    {sku:'TGTGNL00005403',item:'Orange Soda Zero 330ml',cat:'DRINKS',brand:'Orangina',price:2.99,totalOrders:102,multiOrders:42,avgQty:1.0,rate:41.2},
+    {sku:'TGTGNL00005345',item:'Smooth Koffiecups',cat:'BREAKFAST',brand:'Simon Levelt',price:12.99,totalOrders:240,multiOrders:40,avgQty:1.0,rate:16.7},
+    {sku:'TGTGNL00005344',item:'Sparkle Koffiecups',cat:'BREAKFAST',brand:'Simon Levelt',price:15.49,totalOrders:238,multiOrders:39,avgQty:1.0,rate:16.4},
+    {sku:'TGTGNL00005488',item:'Muisjes',cat:'BREAKFAST',brand:'De Ruijter',price:6.99,totalOrders:359,multiOrders:37,avgQty:1.0,rate:10.3},
+    {sku:'TGTGNL00005521',item:'Non Alcoholic Winter IPA',cat:'DRINKS',brand:'Lowlander',price:7.99,totalOrders:149,multiOrders:36,avgQty:1.0,rate:24.2},
+    {sku:'TGTGNL00005459',item:'Koekjes',cat:'SNACKS',brand:'PiCK UP!',price:6.99,totalOrders:304,multiOrders:36,avgQty:1.0,rate:11.8},
+    {sku:'TGTGNL00005572',item:'Knijpfruit Variatiemenu',cat:'KIDS',brand:'Olvarit',price:7.49,totalOrders:85,multiOrders:36,avgQty:1.0,rate:42.4},
+    {sku:'TGTGNL00005370',item:'Melk Chocolade',cat:'SNACKS',brand:'Cote d\'Or',price:9.99,totalOrders:513,multiOrders:36,avgQty:1.0,rate:7.0},
+    {sku:'TGTGNL00005315',item:'Specials Hagel',cat:'BREAKFAST',brand:'De Ruijter',price:8.49,totalOrders:459,multiOrders:35,avgQty:1.0,rate:7.6},
+    {sku:'TGTGNL00005461',item:'Stroopwafels Caramel',cat:'SNACKS',brand:'Kanjers',price:6.99,totalOrders:348,multiOrders:35,avgQty:1.0,rate:10.1},
+    {sku:'TGTGNL00005445',item:'Citroen Mayonaise',cat:'PANTRY',brand:'Devos & Lemmens',price:2.99,totalOrders:343,multiOrders:34,avgQty:1.0,rate:9.9},
+    {sku:'TGTGNL00005239',item:'Cuisine in saus XL',cat:'PET FOOD',brand:'Cesar',price:10.99,totalOrders:130,multiOrders:34,avgQty:1.0,rate:26.2},
+    {sku:'TGTGNL00005390',item:'Kombucha BIO XL',cat:'DRINKS',brand:'Gutsy Captain',price:7.99,totalOrders:146,multiOrders:34,avgQty:1.0,rate:23.3},
+    {sku:'TGTGNL00005275',item:'Iced Koffie',cat:'DRINKS',brand:'Carlito\'s',price:4.99,totalOrders:167,multiOrders:34,avgQty:1.0,rate:20.4},
+    {sku:'TGTGNL00005359',item:'Bio Tomatensap 750ml',cat:'DRINKS',brand:'Smaakt',price:2.99,totalOrders:147,multiOrders:33,avgQty:1.0,rate:22.4},
+    {sku:'TGTGNL00005348',item:'Cassis Zero 500ml',cat:'DRINKS',brand:'Hero',price:4.49,totalOrders:188,multiOrders:32,avgQty:1.0,rate:17.0},
+    {sku:'TGTGNL00005392',item:'Drinkmaaltijd XL',cat:'HEALTH',brand:'Barebells',price:9.99,totalOrders:122,multiOrders:30,avgQty:1.0,rate:24.6},
+    {sku:'TGTGNL00005338',item:'Chocolade Mix',cat:'SNACKS',brand:'Reese\'s',price:6.99,totalOrders:260,multiOrders:30,avgQty:1.0,rate:11.5},
+    {sku:'TGTGNL00005485',item:'Good Noodles Rund',cat:'MEALS',brand:'Unox',price:1.99,totalOrders:141,multiOrders:30,avgQty:1.0,rate:21.3},
+    {sku:'TGTGNL00005407',item:'Reload en Protect',cat:'DRINKS',brand:'Vitamin Well',price:8.49,totalOrders:105,multiOrders:29,avgQty:1.0,rate:27.6},
+    {sku:'TGTGNL00005204',item:'Specials Hagel',cat:'BREAKFAST',brand:'De Ruijter',price:9.99,totalOrders:316,multiOrders:29,avgQty:1.0,rate:9.2},
+    {sku:'TGTGNL00005369',item:'Bonbonbloc XL',cat:'SNACKS',brand:'Cote d\'Or',price:11.99,totalOrders:556,multiOrders:28,avgQty:1.0,rate:5.0},
+    {sku:'TGTGNL00005424',item:'Popped Crisps',cat:'SNACKS',brand:'Popworks',price:8.99,totalOrders:259,multiOrders:27,avgQty:1.0,rate:10.4},
+    {sku:'TGTGNL00005385',item:'Bio Chocolade',cat:'SNACKS',brand:'LoveChock',price:8.99,totalOrders:161,multiOrders:27,avgQty:1.0,rate:16.8},
+    {sku:'TGTGNL00005360',item:'Gedroogde Pruimen Bio',cat:'SNACKS',brand:'Smaakt',price:5.99,totalOrders:139,multiOrders:27,avgQty:1.0,rate:19.4},
+    {sku:'TGTGNL00005579',item:'Almond Baobab Bio',cat:'SNACKS',brand:'Lovechock',price:7.99,totalOrders:128,multiOrders:27,avgQty:1.0,rate:21.1},
+  ],
+  '2026-04': [
+    {sku:'TGTGNL00005699',item:'Caramel Sea Salt',cat:'SNACKS',brand:'Twix',price:6.99,totalOrders:770,multiOrders:137,avgQty:1.0,rate:17.8},
+    {sku:'TGTGNL00005774',item:'1Kcal Appel Perzik',cat:'DRINKS',brand:'Dubbelfrisss',price:2.99,totalOrders:220,multiOrders:111,avgQty:1.0,rate:50.5},
+    {sku:'TGTGNL00005649',item:'Rood Fruit Drinkyoghurt',cat:'DRINKS',brand:'Fristi',price:11.99,totalOrders:482,multiOrders:111,avgQty:1.0,rate:23.0},
+    {sku:'TGTGNL00005642',item:'Haverrijst Minuutje',cat:'PANTRY',brand:'Lassie',price:1.99,totalOrders:361,multiOrders:110,avgQty:1.0,rate:30.5},
+    {sku:'TGTGNL00005827',item:'Haverdrank',cat:'DRINKS',brand:'Alpro',price:5.49,totalOrders:237,multiOrders:106,avgQty:1.0,rate:44.7},
+    {sku:'TGTGNL00005446',item:'Sparkling Drankjes',cat:'DRINKS',brand:'Chupa Chups',price:4.99,totalOrders:217,multiOrders:77,avgQty:1.0,rate:35.5},
+    {sku:'TGTGNL00005697',item:'Ice Tea Lemon 1.5L',cat:'DRINKS',brand:'Lipton',price:9.99,totalOrders:545,multiOrders:76,avgQty:1.0,rate:13.9},
+    {sku:'TGTGNL00005654',item:'San Francisco Koekjes',cat:'SNACKS',brand:'Verkade',price:5.49,totalOrders:248,multiOrders:74,avgQty:1.0,rate:29.8},
+    {sku:'TGTGNL00005737',item:'Iced Koffie',cat:'DRINKS',brand:'Carlito\'s',price:4.49,totalOrders:171,multiOrders:72,avgQty:1.0,rate:42.1},
+    {sku:'TGTGNL00005770',item:'Sparkling Drankjes',cat:'DRINKS',brand:'Chupa Chups',price:1.99,totalOrders:157,multiOrders:68,avgQty:2.0,rate:43.3},
+    {sku:'TGTGNL00005740',item:'Good Instant Maaltijden',cat:'MEALS',brand:'Unox',price:5.49,totalOrders:223,multiOrders:65,avgQty:1.0,rate:29.1},
+    {sku:'TGTGNL00005463',item:'Haverdrank',cat:'DRINKS',brand:'Alpro',price:7.49,totalOrders:266,multiOrders:60,avgQty:1.0,rate:22.6},
+    {sku:'TGTGNL00005682',item:'Dessert Vanille',cat:'BREAKFAST',brand:'Alpro',price:4.99,totalOrders:290,multiOrders:60,avgQty:1.0,rate:20.7},
+    {sku:'TGTGNL00005768',item:'Crunchy Pistachio',cat:'SNACKS',brand:'Delicious',price:2.99,totalOrders:167,multiOrders:55,avgQty:1.0,rate:32.9},
+    {sku:'TGTGNL00005767',item:'Crunchetos Chili',cat:'SNACKS',brand:'Cheetos',price:2.99,totalOrders:187,multiOrders:55,avgQty:1.0,rate:29.4},
+    {sku:'TGTGNL00005686',item:'Proteinrepen XL',cat:'HEALTH',brand:'Barebells',price:11.49,totalOrders:162,multiOrders:51,avgQty:1.0,rate:31.5},
+    {sku:'TGTGNL00005776',item:'Original en Cakejes',cat:'SNACKS',brand:'Oreo',price:4.99,totalOrders:294,multiOrders:49,avgQty:1.0,rate:16.7},
+    {sku:'TGTGNL00005825',item:'Secret Centre Biscuits',cat:'SNACKS',brand:'',price:7.99,totalOrders:261,multiOrders:49,avgQty:1.0,rate:18.8},
+    {sku:'TGTGNL00005662',item:'Good Noodles Rund',cat:'MEALS',brand:'Unox',price:1.99,totalOrders:220,multiOrders:47,avgQty:1.0,rate:21.4},
+    {sku:'TGTGNL00005598',item:'Original en Cakejes',cat:'SNACKS',brand:'Oreo',price:4.99,totalOrders:206,multiOrders:47,avgQty:1.0,rate:22.8},
+    {sku:'TGTGNL00005731',item:'Melk Hazelnoot Caramel XL',cat:'SNACKS',brand:'Cote d\'Or',price:13.99,totalOrders:521,multiOrders:45,avgQty:1.0,rate:8.6},
+    {sku:'TGTGNL00005346',item:'Supreme Koffiecups',cat:'DRINKS',brand:'Simon Levelt',price:6.99,totalOrders:138,multiOrders:44,avgQty:1.0,rate:31.9},
+    {sku:'TGTGNL00005679',item:'Soja Ongezoet + Proteine',cat:'DRINKS',brand:'Alpro',price:6.49,totalOrders:178,multiOrders:44,avgQty:1.0,rate:24.7},
+    {sku:'TGTGNL00005708',item:'Koekjes',cat:'SNACKS',brand:'PiCK UP!',price:5.99,totalOrders:331,multiOrders:44,avgQty:1.0,rate:13.3},
+    {sku:'TGTGNL00005698',item:'Ice Tea Citrus Zero Sugar',cat:'DRINKS',brand:'Lipton',price:9.99,totalOrders:446,multiOrders:44,avgQty:1.0,rate:9.9},
+    {sku:'TGTGNL00005641',item:'Volkoren Graanontbijt',cat:'BREAKFAST',brand:'Brinta',price:4.99,totalOrders:152,multiOrders:43,avgQty:1.0,rate:28.3},
+    {sku:'TGTGNL00005694',item:'Cassis 500ml',cat:'DRINKS',brand:'Hero',price:1.99,totalOrders:172,multiOrders:42,avgQty:1.0,rate:24.4},
+    {sku:'TGTGNL00005863',item:'Fruity Mango Drinkmaaltijd',cat:'HEALTH',brand:'Yfood',price:9.99,totalOrders:160,multiOrders:42,avgQty:1.0,rate:26.3},
+    {sku:'TGTGNL00005688',item:'Mix Chips',cat:'SNACKS',brand:'Chio',price:3.99,totalOrders:334,multiOrders:41,avgQty:1.0,rate:12.3},
+    {sku:'TGTGNL00005498',item:'Cassis Zero 1.25L',cat:'DRINKS',brand:'Hero',price:9.49,totalOrders:287,multiOrders:40,avgQty:1.0,rate:13.9},
+    {sku:'TGTGNL00005826',item:'Muesli Coconut Cacao',cat:'BREAKFAST',brand:'Holie\'s',price:4.99,totalOrders:226,multiOrders:38,avgQty:1.0,rate:16.8},
+    {sku:'TGTGNL00005784',item:'Non Alcoholic Winter IPA',cat:'DRINKS',brand:'Lowlander',price:7.99,totalOrders:112,multiOrders:37,avgQty:1.0,rate:33.0},
+    {sku:'TGTGNL00005618',item:'Sportrepen',cat:'HEALTH',brand:'BORN',price:4.99,totalOrders:145,multiOrders:37,avgQty:1.0,rate:25.5},
+    {sku:'TGTGNL00005754',item:'Luxe Chips',cat:'SNACKS',brand:'Kettle',price:2.99,totalOrders:178,multiOrders:37,avgQty:1.0,rate:20.8},
+    {sku:'TGTGNL00005651',item:'Muesli Coconut Cacao',cat:'BREAKFAST',brand:'Holie\'s',price:6.99,totalOrders:242,multiOrders:37,avgQty:1.0,rate:15.3},
+    {sku:'TGTGNL00005820',item:'Aardbei 600ml',cat:'DRINKS',brand:'Karvan Cevitam',price:5.49,totalOrders:96,multiOrders:37,avgQty:1.0,rate:38.5},
+    {sku:'TGTGNL00005683',item:'Almond Barista',cat:'DRINKS',brand:'Alpro',price:8.49,totalOrders:228,multiOrders:35,avgQty:1.0,rate:15.4},
+    {sku:'TGTGNL00005681',item:'Sojadrink Mix',cat:'DRINKS',brand:'Alpro',price:6.99,totalOrders:184,multiOrders:35,avgQty:1.0,rate:19.0},
+    {sku:'TGTGNL00005771',item:'Vlokken Wit',cat:'BREAKFAST',brand:'De Ruijter',price:3.99,totalOrders:300,multiOrders:34,avgQty:1.0,rate:11.3},
+    {sku:'TGTGNL00005772',item:'Hagelslag Melk Chocolade',cat:'BREAKFAST',brand:'De Ruijter',price:5.99,totalOrders:308,multiOrders:34,avgQty:1.0,rate:11.0},
+    {sku:'TGTGNL00005405',item:'Fruitbiscuit Naturel XL',cat:'SNACKS',brand:'Sultana',price:12.49,totalOrders:349,multiOrders:33,avgQty:1.0,rate:9.5},
+    {sku:'TGTGNL00005769',item:'Koffierepen',cat:'SNACKS',brand:'It\'s a BOOM!',price:2.99,totalOrders:216,multiOrders:33,avgQty:1.0,rate:15.3},
+    {sku:'TGTGNL00005573',item:'Babyvoeding 6-8m+',cat:'KIDS',brand:'Olvarit',price:4.99,totalOrders:89,multiOrders:32,avgQty:1.0,rate:36.0},
+    {sku:'TGTGNL00005658',item:'Stroopwafels Caramel',cat:'SNACKS',brand:'Kanjers',price:7.0,totalOrders:311,multiOrders:32,avgQty:1.0,rate:10.3},
+    {sku:'TGTGNL00005756',item:'Vers Gestoomde Maaltijd Hond',cat:'PET FOOD',brand:'Smolke',price:16.49,totalOrders:95,multiOrders:30,avgQty:1.0,rate:31.6},
+    {sku:'TGTGNL00005734',item:'Cruesli Mix',cat:'BREAKFAST',brand:'Quaker',price:7.49,totalOrders:255,multiOrders:30,avgQty:1.0,rate:11.8},
+    {sku:'TGTGNL00005865',item:'Strawberry Drinkmaaltijd',cat:'HEALTH',brand:'Yfood',price:9.99,totalOrders:127,multiOrders:30,avgQty:1.0,rate:23.6},
+    {sku:'TGTGNL00005764',item:'Tops Koekjes',cat:'SNACKS',brand:'Verkade',price:6.99,totalOrders:393,multiOrders:29,avgQty:1.0,rate:7.4},
+    {sku:'TGTGNL00005653',item:'Mix Chocolade',cat:'SNACKS',brand:'Milka',price:9.99,totalOrders:262,multiOrders:28,avgQty:1.0,rate:10.7},
+    {sku:'TGTGNL00005645',item:'Multivit Kiwi Sinaasappel',cat:'DRINKS',brand:'Roosvicee',price:6.99,totalOrders:156,multiOrders:27,avgQty:1.0,rate:17.3},
+  ],
+  '2026-05': [
+    {sku:'TGTGNL00006006',item:'Sparkling Drankjes',cat:'DRINKS',brand:'Chupa Chups',price:0.99,totalOrders:185,multiOrders:109,avgQty:1.0,rate:58.9},
+    {sku:'TGTGNL00005963',item:'Lemonade',cat:'DRINKS',brand:'Calypso',price:0.99,totalOrders:164,multiOrders:97,avgQty:1.0,rate:59.1},
+    {sku:'TGTGNL00006014',item:'Proteinrepen',cat:'HEALTH',brand:'Barebells',price:6.99,totalOrders:193,multiOrders:86,avgQty:1.0,rate:44.6},
+    {sku:'TGTGNL00006018',item:'Crunchetos Chili',cat:'SNACKS',brand:'Cheetos',price:0.99,totalOrders:219,multiOrders:81,avgQty:1.0,rate:37.0},
+    {sku:'TGTGNL00005737',item:'Iced Koffie',cat:'DRINKS',brand:'Carlito\'s',price:2.49,totalOrders:155,multiOrders:76,avgQty:1.0,rate:49.0},
+    {sku:'TGTGNL00005783',item:'Koffiecups',cat:'DRINKS',brand:'Simon Levelt',price:10.99,totalOrders:156,multiOrders:76,avgQty:1.0,rate:48.7},
+    {sku:'TGTGNL00005958',item:'Iced Koffie',cat:'DRINKS',brand:'Carlito\'s',price:8.99,totalOrders:229,multiOrders:71,avgQty:1.0,rate:31.0},
+    {sku:'TGTGNL00005840',item:'Koekjes',cat:'SNACKS',brand:'PiCK UP!',price:6.99,totalOrders:169,multiOrders:65,avgQty:1.0,rate:38.5},
+    {sku:'TGTGNL00006052',item:'Haverrijst Minuutje',cat:'PANTRY',brand:'Lassie',price:0.99,totalOrders:156,multiOrders:64,avgQty:2.0,rate:41.0},
+    {sku:'TGTGNL00005773',item:'Mini Hagel en Vlokken',cat:'BREAKFAST',brand:'De Ruijter',price:7.49,totalOrders:377,multiOrders:62,avgQty:1.0,rate:16.4},
+    {sku:'TGTGNL00006064',item:'Milk Salted Almonds',cat:'SNACKS',brand:'Cote d\'Or',price:3.99,totalOrders:249,multiOrders:58,avgQty:1.0,rate:23.3},
+    {sku:'TGTGNL00005847',item:'Boba Box',cat:'DRINKS',brand:'The Inspire Food Company',price:6.99,totalOrders:128,multiOrders:51,avgQty:1.0,rate:39.8},
+    {sku:'TGTGNL00005844',item:'Thee Cadeaupakket met Mok',cat:'DRINKS',brand:'Clipper',price:6.99,totalOrders:223,multiOrders:50,avgQty:1.0,rate:22.4},
+    {sku:'TGTGNL00006025',item:'BonBonBloc Vanille',cat:'SNACKS',brand:'Cote d\'Or',price:4.99,totalOrders:242,multiOrders:45,avgQty:1.0,rate:18.6},
+    {sku:'TGTGNL00005935',item:'Koekjes',cat:'SNACKS',brand:'PiCK UP!',price:3.99,totalOrders:139,multiOrders:40,avgQty:1.0,rate:28.8},
+    {sku:'TGTGNL00005957',item:'Cashewnoten',cat:'SNACKS',brand:'Johnny Cashew',price:6.99,totalOrders:439,multiOrders:40,avgQty:1.0,rate:9.1},
+    {sku:'TGTGNL00005912',item:'Haverdrank',cat:'DRINKS',brand:'Alpro',price:7.49,totalOrders:133,multiOrders:40,avgQty:1.0,rate:30.1},
+    {sku:'TGTGNL00005775',item:'Frisdrankjes met Kokosjelly',cat:'DRINKS',brand:'',price:3.99,totalOrders:136,multiOrders:39,avgQty:1.0,rate:28.7},
+    {sku:'TGTGNL00005857',item:'Barista Amandel',cat:'DRINKS',brand:'Alpro',price:6.99,totalOrders:232,multiOrders:39,avgQty:1.0,rate:16.8},
+    {sku:'TGTGNL00005836',item:'Fish Twist Mix',cat:'PANTRY',brand:'John West',price:8.99,totalOrders:216,multiOrders:37,avgQty:1.0,rate:17.1},
+    {sku:'TGTGNL00005965',item:'Dubai Chocolade Crunchy Bar',cat:'SNACKS',brand:'',price:1.99,totalOrders:74,multiOrders:37,avgQty:2.0,rate:50.0},
+    {sku:'TGTGNL00005864',item:'Fruity Peach Drinkmaaltijd',cat:'HEALTH',brand:'Yfood',price:9.99,totalOrders:149,multiOrders:36,avgQty:1.0,rate:24.2},
+    {sku:'TGTGNL00005920',item:'Snoeppakket',cat:'SNACKS',brand:'Becky\'s',price:5.99,totalOrders:153,multiOrders:36,avgQty:1.0,rate:23.5},
+    {sku:'TGTGNL00006185',item:'Vegetarische Erwtensoep',cat:'PANTRY',brand:'Unox',price:1.99,totalOrders:118,multiOrders:36,avgQty:1.0,rate:30.5},
+    {sku:'TGTGNL00005960',item:'Sojadrink',cat:'DRINKS',brand:'Alpro',price:3.99,totalOrders:124,multiOrders:35,avgQty:1.0,rate:28.2},
+    {sku:'TGTGNL00005889',item:'Proteinrepen XL',cat:'HEALTH',brand:'Barebells',price:12.99,totalOrders:130,multiOrders:35,avgQty:1.0,rate:26.9},
+    {sku:'TGTGNL00005898',item:'Flat White Double Shot',cat:'DRINKS',brand:'Oatly',price:9.99,totalOrders:149,multiOrders:34,avgQty:1.0,rate:22.8},
+    {sku:'TGTGNL00006022',item:'Barista Oat',cat:'DRINKS',brand:'Alpro',price:4.99,totalOrders:84,multiOrders:34,avgQty:1.0,rate:40.5},
+    {sku:'TGTGNL00005953',item:'Lay\'s en Doritos Chips',cat:'SNACKS',brand:'',price:10.49,totalOrders:462,multiOrders:34,avgQty:1.0,rate:7.4},
+    {sku:'TGTGNL00005841',item:'Soyadrink Protein',cat:'DRINKS',brand:'Alpro',price:5.99,totalOrders:156,multiOrders:33,avgQty:1.0,rate:21.2},
+    {sku:'TGTGNL00005642',item:'Haverrijst Minuutje',cat:'PANTRY',brand:'Lassie',price:0.99,totalOrders:91,multiOrders:32,avgQty:1.0,rate:35.2},
+    {sku:'TGTGNL00006045',item:'Ginger Beer 750ml',cat:'DRINKS',brand:'Fentimans',price:14.99,totalOrders:244,multiOrders:31,avgQty:1.0,rate:12.7},
+    {sku:'TGTGNL00006063',item:'Aperitifs Pakket',cat:'DRINKS',brand:'Club Canette',price:4.99,totalOrders:168,multiOrders:31,avgQty:1.0,rate:18.5},
+    {sku:'TGTGNL00005956',item:'Yofruit Biscuit',cat:'SNACKS',brand:'Sultana',price:8.49,totalOrders:306,multiOrders:30,avgQty:1.0,rate:9.8},
+    {sku:'TGTGNL00005951',item:'Knijpfruit 12m+',cat:'KIDS',brand:'Organix',price:6.99,totalOrders:132,multiOrders:29,avgQty:1.0,rate:22.0},
+    {sku:'TGTGNL00005894',item:'Dessert Vanille',cat:'BREAKFAST',brand:'Alpro',price:4.49,totalOrders:263,multiOrders:28,avgQty:1.0,rate:10.6},
+    {sku:'TGTGNL00005933',item:'Basispakketten Mix',cat:'PANTRY',brand:'Knorr',price:3.49,totalOrders:178,multiOrders:28,avgQty:1.0,rate:15.7},
+    {sku:'TGTGNL00005908',item:'Ice Tea Sparkling 1L',cat:'DRINKS',brand:'Lipton',price:8.99,totalOrders:247,multiOrders:28,avgQty:1.0,rate:11.3},
+    {sku:'TGTGNL00006186',item:'Fish Twist Mix',cat:'PANTRY',brand:'John West',price:2.99,totalOrders:56,multiOrders:27,avgQty:2.0,rate:48.2},
+    {sku:'TGTGNL00005763',item:'Crispy Minis Chocolade',cat:'BREAKFAST',brand:'Weetabix',price:4.99,totalOrders:171,multiOrders:27,avgQty:1.0,rate:15.8},
+    {sku:'TGTGNL00006020',item:'Tijgernootjes',cat:'SNACKS',brand:'Duyvis',price:4.99,totalOrders:265,multiOrders:27,avgQty:1.0,rate:10.2},
+    {sku:'TGTGNL00005916',item:'Siropen Mix',cat:'DRINKS',brand:'SodaStream',price:10.99,totalOrders:137,multiOrders:27,avgQty:1.0,rate:19.7},
+    {sku:'TGTGNL00006023',item:'Frisdrankjes met Kokosjelly',cat:'DRINKS',brand:'',price:0.99,totalOrders:39,multiOrders:27,avgQty:6.0,rate:69.2},
+    {sku:'TGTGNL00005698',item:'Ice Tea Citrus Zero Sugar',cat:'DRINKS',brand:'Lipton',price:9.99,totalOrders:262,multiOrders:26,avgQty:1.0,rate:9.9},
+    {sku:'TGTGNL00005927',item:'Sushi Nori',cat:'PANTRY',brand:'Saitaku',price:2.49,totalOrders:80,multiOrders:26,avgQty:1.0,rate:32.5},
+    {sku:'TGTGNL00005346',item:'Supreme Koffiecups',cat:'DRINKS',brand:'Simon Levelt',price:5.99,totalOrders:56,multiOrders:24,avgQty:2.0,rate:42.9},
+    {sku:'TGTGNL00005883',item:'Soda Citrussmaak',cat:'DRINKS',brand:'Schweppes',price:6.99,totalOrders:142,multiOrders:24,avgQty:1.0,rate:16.9},
+    {sku:'TGTGNL00005800',item:'Mini Bars Kokos',cat:'SNACKS',brand:'BioToday',price:7.99,totalOrders:184,multiOrders:24,avgQty:1.0,rate:13.0},
+    {sku:'TGTGNL00005856',item:'Mixed Nuts Sea Salt',cat:'SNACKS',brand:'John Altman',price:9.99,totalOrders:260,multiOrders:23,avgQty:1.0,rate:8.8},
+    {sku:'TGTGNL00005823',item:'Chocolade Kaneel',cat:'BREAKFAST',brand:'De Ruijter',price:7.49,totalOrders:263,multiOrders:22,avgQty:1.0,rate:8.4},
+  ],
+};
+
+const monthLabels = {
+  'all':     'Full Period (Oct 2025 – May 2026)',
+  '2025-10': 'Oct 2025',
+  '2025-11': 'Nov 2025',
+  '2025-12': 'Dec 2025',
+  '2026-01': 'Jan 2026',
+  '2026-02': 'Feb 2026',
+  '2026-03': 'Mar 2026',
+  '2026-04': 'Apr 2026',
+  '2026-05': 'May 2026 (MTD)',
+};
+
+function applyMonthFilter() {
+  const val = document.getElementById('monthFilter').value;
+  const hdr = document.getElementById('skuTableHeader');
+  const data = val === 'all' ? skuData : (monthlySkuData[val] || []);
+  hdr.textContent = val === 'all'
+    ? 'Full SKU Table — Top 40 (Oct 2025 – May 2026)'
+    : `SKU Table — Top 50 for ${monthLabels[val]}`;
+  sortCol = 8; sortDir = -1;
+  renderTable([...data].sort((a,b) => b.rate - a.rate));
+  const ths = document.querySelectorAll('#skuTable thead th');
+  ths.forEach(h => h.className = '');
+  ths[8].className = 'sorted-desc';
+}
+
+function sortTable(col) {
+  const val = document.getElementById('monthFilter').value;
+  const sourceData = val === 'all' ? skuData : (monthlySkuData[val] || []);
+  const ths = document.querySelectorAll('#skuTable thead th');
+  ths.forEach(h => h.className = '');
+  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; }
+  const sorted = [...sourceData].sort((a, b) => {
+    const av = a[keys[col]], bv = b[keys[col]];
+    return typeof av === 'string' ? av.localeCompare(bv) * sortDir : (av - bv) * sortDir;
+  });
+  ths[col].className = sortDir === 1 ? 'sorted-asc' : 'sorted-desc';
+  renderTable(sorted);
+}
+
+sortTable(8);
+</script>
+</body>
+</html>
