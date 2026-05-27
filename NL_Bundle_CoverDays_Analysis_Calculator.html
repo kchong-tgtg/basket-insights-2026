@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NL Bundles — Cover Days Reduction: Analysis & Calculator</title>
+<style>
+  :root {
+    --dg: #00615F; --mg: #03A97B; --sal: #ff7973; --cream: #F9F3F0;
+    --gt: #444; --gm: #888; --bd: #ddd;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Rubik','Segoe UI',sans-serif; background: var(--cream); color: var(--gt); font-size: 14px; }
+  header { background: var(--dg); color: white; padding: 18px 32px 14px; }
+  header h1 { font-family: 'Barlow Semi Condensed','Arial Narrow',sans-serif; font-size: 21px; font-weight: 600; letter-spacing: .4px; }
+  header p { font-size: 12px; opacity: .75; margin-top: 3px; }
+  .tabs { display: flex; background: var(--dg); padding: 0 32px; border-bottom: 3px solid var(--mg); flex-wrap: wrap; }
+  .tab { padding: 9px 18px; cursor: pointer; color: rgba(255,255,255,.6); font-size: 12px; font-weight: 500; border-bottom: 3px solid transparent; margin-bottom: -3px; user-select: none; }
+  .tab:hover { color: white; }
+  .tab.active { color: white; border-bottom-color: var(--sal); }
+  .panel { display: none; padding: 22px 32px 40px; }
+  .panel.active { display: block; }
+  h2 { font-family: 'Barlow Semi Condensed','Arial Narrow',sans-serif; font-size: 17px; font-weight: 600; color: var(--dg); margin-bottom: 5px; }
+  .sub { font-size: 12px; color: var(--gm); margin-bottom: 14px; line-height: 1.6; }
+  .note { background: #fff8e1; border-left: 3px solid #f0b429; padding: 9px 13px; font-size: 12px; border-radius: 0 4px 4px 0; margin-top: 12px; line-height: 1.6; color: #555; }
+
+  /* SHARED MATRIX STYLES */
+  .mx-wrap { overflow-x: auto; }
+  table.mx { border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  table.mx th { background: var(--dg); color: white; padding: 9px 10px; font-size: 11px; font-weight: 600; text-align: center; white-space: nowrap; }
+  table.mx th.rl { text-align: left; min-width: 105px; }
+  table.mx td { padding: 7px 9px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  table.mx tr:last-child td { border-bottom: none; }
+  td.bl { font-weight: 600; background: #f7f9f8; color: var(--dg); font-size: 12px; padding-left: 12px; white-space: nowrap; }
+  .cb { display: flex; flex-direction: column; gap: 2px; min-height: 58px; justify-content: center; }
+  .ce { display: flex; align-items: center; justify-content: center; min-height: 58px; color: #ccc; font-size: 11px; }
+  .ob { display: flex; height: 7px; border-radius: 3px; overflow: hidden; margin-bottom: 3px; }
+  .s7 { background: var(--mg); } .s14 { background: #85c9a0; } .s21 { background: #f7d06b; } .ss { background: #f0aeaa; }
+  .ols { display: flex; gap: 3px; flex-wrap: wrap; }
+  .ol { font-size: 10px; }
+  .og { color: var(--dg); font-weight: 600; } .oy { color: #b08a00; } .or { color: #c0453f; } .om { color: var(--gm); }
+  .cm { font-size: 10px; color: var(--gm); margin-top: 2px; }
+  .ln { border: 1.5px dashed #ddd !important; border-radius: 4px; }
+  .lnb { display: inline-block; background: #fff3cd; color: #856404; border-radius: 3px; padding: 1px 4px; font-size: 9px; margin-bottom: 2px; }
+  .lgd { display: flex; gap: 14px; margin-bottom: 12px; font-size: 11px; flex-wrap: wrap; }
+  .li { display: flex; align-items: center; gap: 5px; }
+  .ld { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  .na-cell { background: #fafafa; }
+
+  /* PATH MATRIX specific */
+  .path-label { font-size: 10px; color: var(--gm); margin-bottom: 2px; }
+  .disc-badge { display: inline-block; background: #e8f5f0; color: var(--dg); border-radius: 3px; padding: 1px 5px; font-size: 10px; font-weight: 600; margin-bottom: 3px; }
+
+  /* DIMINISHING RETURNS */
+  .chart-card { background: white; border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); width: 100%; max-width: 600px; }
+  .chart-card h3 { font-size: 13px; font-weight: 600; color: var(--dg); margin-bottom: 14px; }
+  .ic-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 14px; }
+  @media(max-width:700px){ .ic-grid { grid-template-columns: 1fr; } }
+  .ic { background: white; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08); border-top: 3px solid var(--mg); }
+  .ic.w { border-top-color: var(--sal); }
+  .ic h4 { font-size: 11px; color: var(--gm); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+  .ic p { font-size: 12px; line-height: 1.5; }
+  .ic strong { color: var(--dg); }
+
+  /* CALCULATOR */
+  .cw { display: grid; grid-template-columns: minmax(260px, 300px) 1fr; gap: 22px; align-items: start; }
+  @media(max-width:900px){ .cw { grid-template-columns: 1fr; } }
+  .ci { background: white; border-radius: 8px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .ci h3 { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--dg); }
+  .fg { margin-bottom: 12px; }
+  .fg label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .fg input, .fg select { width: 100%; padding: 7px 9px; border: 1.5px solid var(--bd); border-radius: 6px; font-size: 13px; background: white; }
+  .fg input:focus, .fg select:focus { outline: none; border-color: var(--mg); }
+  .fg .ht { font-size: 11px; color: var(--gm); margin-top: 2px; }
+  .cb-btn { width: 100%; padding: 9px; background: var(--dg); color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+  .cb-btn:hover { background: #004d4b; }
+  .co { min-height: 260px; overflow-x: auto; min-width: 0; }
+  .st { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .st-wrap { overflow-x: auto; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .st table { width: 100%; border-collapse: collapse; background: white; }
+  .st th { background: var(--dg); color: white; padding: 9px 11px; font-size: 11px; text-align: center; white-space: nowrap; }
+  .st th:first-child { text-align: left; }
+  .st td { padding: 9px 11px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 12px; vertical-align: middle; }
+  .st td:first-child { text-align: left; }
+  .st tr:last-child td { border-bottom: none; }
+  .st tr.hi td { background: #e8f5f0; }
+  .grp-hd td { background: #f2f7f6 !important; font-size: 10px; color: var(--dg); font-weight: 600; padding: 4px 11px; letter-spacing: .3px; border-bottom: none !important; }
+  @media(max-width:600px){
+    .st td, .st th { padding: 7px 8px; font-size: 11px; }
+    .st .hide-sm { display: none; }
+  }
+  .bdg { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .bg { background: #c6f0de; color: var(--dg); }
+  .by { background: #fff3cd; color: #856404; }
+  .bo { background: #ffe5d0; color: #8b4800; }
+  .br { background: #fde8e8; color: #c0453f; }
+  .cdv { font-weight: 700; font-size: 14px; }
+  .ph { display: flex; align-items: center; justify-content: center; min-height: 180px; color: var(--gm); font-size: 13px; flex-direction: column; gap: 8px; }
+  .cs { background: #f0faf6; border: 1.5px solid var(--mg); border-radius: 8px; padding: 12px 15px; margin-bottom: 14px; display: flex; gap: 22px; flex-wrap: wrap; }
+  .csl { font-size: 11px; color: var(--gm); }
+  .csv { font-size: 16px; font-weight: 700; color: var(--dg); }
+  .df { margin-top: 20px; padding: 12px 16px; background: white; border-radius: 8px; font-size: 11px; color: var(--gm); line-height: 1.7; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NL Bundles — Cover Days Reduction: Analysis & Calculator</h1>
+  <p>For bundles with excess cover days (22+): what price reduction moves stock, and where's the revenue sweet spot?</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active"  onclick="showTab('matrix')">📊 Cover Day Outcomes</div>
+  <div class="tab"         onclick="showTab('path')">🔀 Price Path View</div>
+  <div class="tab"         onclick="showTab('calc')">🧮 Scenario Calculator</div>
+  <div class="tab"         onclick="showTab('method')">📋 Methodology</div>
+</div>
+
+<!-- ===== TAB 1: DISCOUNT BAND MATRIX ===== -->
+<div id="tab-matrix" class="panel active">
+  <h2>Cover Day Outcomes by Landing Price &amp; Discount Band</h2>
+  <p class="sub">
+    Rows = price after the markdown. Columns = discount %. Each cell shows what % of excess-stock events (22+ cover days at time of change) landed in each cover day bucket after the price change.
+  </p>
+  <div class="lgd">
+    <div class="li"><div class="ld" style="background:var(--mg)"></div><span>Reached &lt;7 days (ideal)</span></div>
+    <div class="li"><div class="ld" style="background:#85c9a0"></div><span>7–14 days (acceptable)</span></div>
+    <div class="li"><div class="ld" style="background:#f7d06b"></div><span>15–21 days</span></div>
+    <div class="li"><div class="ld" style="background:#f0aeaa"></div><span>Still 22+ (excess)</span></div>
+    <div class="li"><div class="ld" style="background:#fff3cd;border:1px solid #ddd"></div><span>n≤3 — directional only</span></div>
+  </div>
+  <div class="mx-wrap">
+    <table class="mx" style="width:100%;min-width:680px">
+      <thead><tr>
+        <th class="rl">Price after change</th>
+        <th>&lt;10% off</th><th>10–20% off</th><th>20–30% off</th><th>30–40% off</th><th>40%+ off</th>
+      </tr></thead>
+      <tbody id="matrix-body"></tbody>
+    </table>
+  </div>
+  <div class="note">
+    ⚠️ <strong>Pre-RoS = 0 items:</strong> Items with no sales before the markdown are included. Their "days to clear" is based on the absolute post-discount RoS observed in the data for that price band, not a % improvement. This is why average cover days can appear very high in some cells.
+  </div>
+
+  <!-- Diminishing Returns section merged here -->
+  <div style="margin-top:28px; border-top:1px solid #e8e8e8; padding-top:22px;">
+    <h2 style="margin-bottom:5px;">Where Does More Discount Stop Paying Off?</h2>
+    <p class="sub">Average RoS improvement by discount depth — items with 22+ cover days and pre-RoS &gt; 0. The minimum cut to reach &lt;14 days, and where going deeper stops paying off.</p>
+    <div class="chart-card">
+      <h3>Avg RoS Improvement (%) by Discount Band — all price bands, weighted by event count</h3>
+      <div id="chart-ros-wrap"></div>
+    </div>
+    <div class="ic-grid">
+      <div class="ic">
+        <h4>€2–€6 sweet spot</h4>
+        <p><strong>20–30% off</strong> is the inflection point — most items reach &lt;14d in one cut. Beyond 30%, RoS gains flatten while revenue loss grows.</p>
+      </div>
+      <div class="ic">
+        <h4>€6–€15 items</h4>
+        <p><strong>Cross a band boundary</strong> (e.g. €7→€5) rather than trimming within it. A 10–20% same-band cut typically leaves most items still in excess.</p>
+      </div>
+      <div class="ic w">
+        <h4>€15+ items</h4>
+        <p><strong>30%+ needed.</strong> 10–20% off leaves ~89% still in excess. Often requires crossing two band boundaries to reach &lt;14 days.</p>
+      </div>
+    </div>
+    <div class="note" style="margin-top:14px;">
+      ℹ️ Cold-start items (pre-RoS = 0) excluded — improvement % is undefined. Weighted by event count. Treat as directional given small sample sizes.
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB 2: PRICE PATH MATRIX ===== -->
+<div id="tab-path" class="panel">
+  <h2>Cover Day Outcomes by Price Journey (From → To)</h2>
+  <p class="sub">
+    Rows = price band <strong>before</strong> the markdown. Columns = price band <strong>after</strong>. The diagonal (same band) = small discount staying in the same range. Off-diagonal = crossing a price band boundary. The avg discount % achieved by that price move is shown in each cell.
+  </p>
+  <div class="lgd">
+    <div class="li"><div class="ld" style="background:var(--mg)"></div><span>Reached &lt;7 days (ideal)</span></div>
+    <div class="li"><div class="ld" style="background:#85c9a0"></div><span>7–14 days (acceptable)</span></div>
+    <div class="li"><div class="ld" style="background:#f7d06b"></div><span>15–21 days</span></div>
+    <div class="li"><div class="ld" style="background:#f0aeaa"></div><span>Still 22+ (excess)</span></div>
+  </div>
+  <div class="mx-wrap">
+    <table class="mx" id="path-table" style="min-width:680px">
+      <thead><tr>
+        <th class="rl">From price band ↓ / To price band →</th>
+        <th>&lt;€2</th><th>€2–€4</th><th>€4–€6</th><th>€6–€8</th><th>€8–€10</th><th>€10–€15</th><th>€15+</th>
+      </tr></thead>
+      <tbody id="path-body"></tbody>
+    </table>
+  </div>
+  <div class="note">
+    💡 <strong>Key pattern:</strong> Staying within the same price band (diagonal) generally leaves the majority of items in excess. Crossing a band boundary — e.g. €6–€8 → €4–€6 — meaningfully improves outcomes. Cells above the diagonal are empty (price increases). Low-event cells have dashed borders.
+  </div>
+</div>
+
+<!-- ===== TAB 3: METHODOLOGY ===== -->
+<div id="tab-method" class="panel">
+  <h2>Methodology &amp; Data Notes</h2>
+  <p class="sub">How this guide was built, what the data represents, and where to apply caution.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:900px;">
+
+    <div class="ci" style="grid-column:1/-1;">
+      <h3 style="margin-bottom:10px;">🎯 The Question This Answers</h3>
+      <p style="font-size:13px;line-height:1.7;color:#444;">
+        For NL basket bundles that are sitting in excess (22+ cover days), <strong>what price reduction meaningfully increases rate of sale — and what is the point of diminishing returns on net bundle revenue?</strong>
+        The goal is to identify the minimum markdown that achieves the stock clearance target (&lt;7 days ideal, &lt;14 days acceptable) in a single price cut.
+      </p>
+    </div>
+
+    <div class="ci">
+      <h3 style="margin-bottom:10px;">📦 Data Sources</h3>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:5px 0;font-weight:600;color:var(--dg);vertical-align:top;white-space:nowrap;padding-right:10px;">Orders &amp; items</td>
+          <td style="padding:5px 0;color:#555;line-height:1.5;"><code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">fct_order_item_parcel</code><br>Filter: <code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">is_basket_order = TRUE</code>, country NL. Used to identify which item IDs are NL basket bundles and to calculate daily sales (rate of sale).</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:5px 0;font-weight:600;color:var(--dg);vertical-align:top;white-space:nowrap;padding-right:10px;">Price history</td>
+          <td style="padding:5px 0;color:#555;line-height:1.5;"><code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">item_manufacturer_price_history</code><br>Filter: <code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">price_type = 'price_on_tgtg'</code>. Column: <code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">value</code>. Date: <code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">valid_from_at_utc</code>. Used to detect price changes and classify them as reductions.</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;font-weight:600;color:var(--dg);vertical-align:top;white-space:nowrap;padding-right:10px;">Stock levels</td>
+          <td style="padding:5px 0;color:#555;line-height:1.5;"><code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">fct_item_period_parcel</code><br>Filter: <code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">period_agg = 'day'</code> only (week/month aggregations not used). Column: <code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;font-size:11px;">available_stock_sum</code>. Stock is joined to the nearest daily record on/before the price change date.</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="ci">
+      <h3 style="margin-bottom:10px;">🔢 Key Definitions</h3>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:5px 0;font-weight:600;color:var(--dg);vertical-align:top;padding-right:10px;white-space:nowrap;">Cover days (pre)</td>
+          <td style="padding:5px 0;color:#555;line-height:1.5;">Stock ÷ pre-discount RoS. Items with zero pre-RoS are assigned 9999 (stuck stock) and still included in the analysis.</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:5px 0;font-weight:600;color:var(--dg);vertical-align:top;padding-right:10px;white-space:nowrap;">Pre / Post RoS</td>
+          <td style="padding:5px 0;color:#555;line-height:1.5;">Average daily units sold in the <strong>3 days before</strong> and <strong>3 days after</strong> the price change date. This window is intentionally short to capture the immediate demand response.</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:5px 0;font-weight:600;color:var(--dg);vertical-align:top;padding-right:10px;white-space:nowrap;">Days to clear</td>
+          <td style="padding:5px 0;color:#555;line-height:1.5;">Stock at time of change ÷ post-discount RoS. Assumes the new RoS is sustained until stock runs out (optimistic, but directionally correct).</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:5px 0;font-weight:600;color:var(--dg);vertical-align:top;padding-right:10px;white-space:nowrap;">Revenue</td>
+          <td style="padding:5px 0;color:#555;line-height:1.5;">All remaining stock × new discounted price. Not a 3-day window — this is total sell-through revenue at the new price.</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;font-weight:600;color:var(--dg);vertical-align:top;padding-right:10px;white-space:nowrap;">Population</td>
+          <td style="padding:5px 0;color:#555;line-height:1.5;">Only price change events where cover days <strong>at the time of the change</strong> were 22 or more. This ensures we're analysing decisions made under excess stock conditions.</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="ci">
+      <h3 style="margin-bottom:10px;">🏷️ Price &amp; Discount Bands</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;">
+        <div>
+          <div style="font-weight:600;color:var(--dg);margin-bottom:6px;">Price bands (landing price)</div>
+          <div style="line-height:2;color:#555;">
+            A — Below €2<br>
+            B — €2.00 – €3.99<br>
+            C — €4.00 – €5.99<br>
+            D — €6.00 – €7.99<br>
+            E — €8.00 – €9.99<br>
+            F — €10.00 – €14.99<br>
+            G — €15 and above
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:600;color:var(--dg);margin-bottom:6px;">Discount bands</div>
+          <div style="line-height:2;color:#555;">
+            A — Less than 10%<br>
+            B — 10% – 20%<br>
+            C — 20% – 30%<br>
+            D — 30% – 40%<br>
+            E — 40% and above
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ci">
+      <h3 style="margin-bottom:10px;">⚙️ Scenario Calculator Logic</h3>
+      <p style="font-size:12px;color:#555;line-height:1.7;">
+        <strong>Selling items (RoS &gt; 0):</strong> The calculator looks up the average historical % RoS improvement for items in the same price band that received a similar discount. It applies that uplift to your current RoS to estimate post-discount RoS.
+        <br><br>
+        <strong>Cold-start items (RoS = 0):</strong> A percentage multiplier can't be applied to zero. Instead, the calculator uses the average <em>absolute</em> post-discount RoS observed for similar items in that price band — i.e. "items like this, at this discount, typically started selling at X/day."
+        <br><br>
+        <strong>Days to clear</strong> = current stock ÷ estimated post-discount RoS. Revenue = stock × new price.
+        <br><br>
+        The <strong>discount midpoint</strong> is used for new price calculation (5% for &lt;10%, 15% for 10–20%, 25% for 20–30%, 35% for 30–40%, 50% for 40%+).
+      </p>
+    </div>
+
+    <div class="ci" style="grid-column:1/-1;">
+      <h3 style="margin-bottom:10px;">📊 How Much Data Is Behind This?</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;font-size:12px;color:#555;line-height:1.7;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--dg);margin-bottom:8px;">~189 total price change events</div>
+          This is the total number of NL basket price <em>reductions</em> in the data warehouse where cover days were 22 or more at the time of the change. The analysis is a full sweep of all available history — not a sample.
+          <br><br>
+          Spread across 7 price bands and 5 discount bands, that works out to an average of roughly <strong>7–8 events per cell</strong>. In practice this is uneven: some cells (e.g. €2–€4 at 40%+ off, or €10–€15 at 10–20% off) have 15–18 events, while many others have 3 or fewer.
+          <br><br>
+          <strong>What "May 2026 snapshot" means:</strong> The queries that built this guide were run in May 2026. They retrieve all available history in the data warehouse — there is no manual date cutoff applied. The start date of available NL basket pricing records is not explicitly known; to find out, you could run <code style="background:#f5f5f5;padding:1px 4px;border-radius:3px;">SELECT MIN(valid_from_at_utc) FROM item_manufacturer_price_history WHERE price_type = 'price_on_tgtg'</code> joined to NL basket items. The end date is effectively May 2026 when the query ran.
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--dg);margin-bottom:8px;">Category breakdown</div>
+          The same 189 events are split by parcel_type_name when the category filter is used. Most categories have very few events per cell — typically 1–4. The two exceptions are:
+          <br><br>
+          <strong>SNACKS</strong> — broadest coverage, multiple price bands with n≥3 per cell.<br>
+          <strong>DRINKS</strong> — good coverage in the €2–€8 range.
+          <br><br>
+          All other categories (BREAKFAST, HEALTH, KIDS, MEALS, PANTRY, PET FOOD, SEASONAL) should be treated as highly directional. Any cell with n≤3 is flagged in the calculator and matrices.
+          <br><br>
+          <div style="background:#fff8e1;border-left:3px solid #f0b429;padding:8px 11px;border-radius:0 4px 4px 0;font-size:11px;color:#555;">
+            ℹ️ The dataset will grow over time as Smriti makes more pricing decisions. Re-running the query in 3–6 months will produce more reliable cell estimates, particularly for higher price bands where data is currently thin.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ci" style="grid-column:1/-1;border-top:3px solid var(--sal);">
+      <h3 style="margin-bottom:10px;">⚠️ Interpretation Caveats</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12px;color:#555;line-height:1.6;">
+        <div>
+          <strong style="color:#c0453f;">Small n = directional, not definitive.</strong> Cells based on 3–8 events should be read as "the data leans this way," not as reliable probability estimates. The outcome bars are more useful than the average RoS number — the distribution shows the range of what actually happened.<br><br>
+          <strong style="color:#c0453f;">RoS averages can be skewed by outliers.</strong> A single item going from 0.2/day to 80/day post-markdown pulls the cell average dramatically. In the calculator, also read the confidence bar — if 50% of similar events still ended in excess, a high average RoS doesn't mean the markdown will work for your SKU.
+        </div>
+        <div>
+          <strong style="color:#c0453f;">3-day RoS windows are noisy.</strong> A single busy weekend or quiet weekday in either the pre or post window shifts the number. The post-RoS is also unlikely to be sustained indefinitely — it captures the initial demand spike.<br><br>
+          <strong style="color:#c0453f;">Days-to-clear assumes constant RoS.</strong> The estimate assumes the post-markdown RoS holds steady until stock runs out. In practice, demand may fade after the initial response. Treat the days-to-clear estimate as optimistic — it's a directional target, not a guarantee.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== TAB 4: CALCULATOR ===== -->
+<div id="tab-calc" class="panel">
+  <h2>Scenario Calculator</h2>
+  <p class="sub">Select the item's current price, stock, and RoS. The calculator shows every standard price point you could mark down to — with estimated clearance time and how confident that estimate is, based on how similar items behaved historically.</p>
+  <div class="cw">
+    <div class="ci">
+      <h3>Item inputs</h3>
+      <div class="fg">
+        <label>Category (optional)</label>
+        <select id="inp-cat">
+          <option value="">All categories (more data)</option>
+          <option>BREAKFAST</option><option>DRINKS</option><option>HEALTH</option>
+          <option>KIDS</option><option>MEALS</option><option>PANTRY</option>
+          <option>PET FOOD</option><option>SEASONAL</option><option>SNACKS</option>
+        </select>
+        <div class="ht">SNACKS &amp; DRINKS have the most coverage. Other categories flagged where limited.</div>
+      </div>
+      <div class="fg">
+        <label>Current Price (€)</label>
+        <select id="inp-price">
+          <option value="">Select current price…</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Current Stock (units)</label>
+        <input type="number" id="inp-stock" min="1" step="1" placeholder="e.g. 150">
+      </div>
+      <div class="fg">
+        <label>Current Daily RoS (units/day)</label>
+        <input type="number" id="inp-ros" min="0" step="0.1" placeholder="e.g. 2.5">
+        <div class="ht">Use 0 if the item has not sold at all</div>
+      </div>
+      <button class="cb-btn" onclick="runCalc()">Show Scenarios →</button>
+    </div>
+    <div class="co" id="calc-output">
+      <div class="ph">
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+        <span>Select item details and click Show Scenarios</span>
+      </div>
+    </div>
+  </div>
+  <div class="df">
+    <strong>How to read this:</strong> Each row is a standard TGTG price point you could mark down to.
+    <strong>Historical Confidence</strong> shows the actual outcome distribution from past markdowns of similar items at that discount — the more dark green, the more reliably it cleared to &lt;7 days.
+    Green rows = estimated &lt;14 days to clear (acceptable). Dark green rows = estimated &lt;7 days (ideal).
+    Revenue = all remaining stock × new price.
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA SET 1 — Overall: price band × discount band (25 rows)
+// [price_band, disc_band, n, stock_n, cd_pre, pre_ros, post_ros, ros_imp, ros_pct, hit_pct, dtc, sub7, p7_14, p15_21, still, rev_delta, rev_old, rev_new]
+// ============================================================
+const RAW = [
+  ['A. <€2',       'C. 20-30%',  1,  1,  45.1,   7.67, 26.67, 19.00, 248, 100, 13,  0,  100, 0,  0,   -20, 862,  689],
+  ['A. <€2',       'D. 30-40%',  1,  1,  37.4,   6.67, 10.33, 3.67,  55,  100, 24,  0,  0,   0,  100, -33, 745,  496],
+  ['A. <€2',       'E. 40%+',    11, 10, 8188,   1.61, 64.94, 63.33, 564, 91,  7,   55, 27,  9,  9,   -60, 1278, 508],
+  ['B. €2–€3.99',  'B. 10-20%',  8,  8,  1297,   4.04, 10.33, 6.29,  130, 100, 24,  0,  25,  13, 63,  -13, 913,  804],
+  ['B. €2–€3.99',  'C. 20-30%',  16, 15, 660,    5.12, 12.02, 6.90,  152, 94,  19,  13, 19,  31, 25,  -23, 803,  621],
+  ['B. €2–€3.99',  'D. 30-40%',  8,  8,  1317,   4.25, 20.75, 16.50, 220, 100, 28,  13, 38,  0,  50,  -35, 1760, 1145],
+  ['B. €2–€3.99',  'E. 40%+',    15, 13, 3356,   7.04, 55.69, 48.64, 621, 87,  7,   60, 20,  7,  13,  -47, 1925, 1002],
+  ['C. €4–€5.99',  'A. <10%',    6,  3,  5016,   3.72, 5.89,  2.17,  51,  33,  27,  0,  17,  0,  83,  -9,  1360, 1243],
+  ['C. €4–€5.99',  'B. 10-20%',  17, 16, 1208,   5.90, 13.27, 7.37,  112, 94,  18,  0,  41,  29, 24,  -15, 1372, 1170],
+  ['C. €4–€5.99',  'C. 20-30%',  7,  7,  79,     4.90, 14.67, 9.76,  244, 100, 20,  0,  57,  0,  29,  -24, 1782, 1373],
+  ['C. €4–€5.99',  'D. 30-40%',  3,  2,  3399,   3.33, 28.11, 24.78, 417, 100, 13,  33, 33,  0,  33,  -35, 2690, 1740],
+  ['C. €4–€5.99',  'E. 40%+',    3,  3,  3354,   5.56, 68.00, 62.44, 486, 100, 6,   67, 33,  0,  0,   -51, 2706, 1274],
+  ['D. €6–€7.99',  'A. <10%',    4,  2,  5016,   3.75, 7.25,  3.50,  94,  50,  18,  0,  25,  0,  75,  -7,  1820, 1699],
+  ['D. €6–€7.99',  'B. 10-20%',  15, 8,  4686,   3.44, 7.44,  4.00,  92,  60,  18,  7,  13,  20, 60,  -12, 1826, 1605],
+  ['D. €6–€7.99',  'C. 20-30%',  9,  8,  2255,   5.30, 11.48, 6.19,  132, 89,  21,  0,  33,  22, 44,  -21, 2183, 1739],
+  ['D. €6–€7.99',  'D. 30-40%',  2,  2,  38,     3.50, 7.00,  3.50,  114, 100, 17,  0,  50,  50, 0,   -30, 1139, 797],
+  ['E. €8–€9.99',  'A. <10%',    5,  1,  8004,   0.73, 1.53,  0.80,  109, 20,  12,  0,  20,  0,  80,  -9,  978,  889],
+  ['E. €8–€9.99',  'B. 10-20%',  4,  4,  33,     8.00, 22.58, 14.58, 207, 100, 11,  0,  75,  25, 0,   -18, 2657, 2173],
+  ['E. €8–€9.99',  'C. 20-30%',  3,  3,  56,     3.00, 6.33,  3.33,  91,  100, 34,  0,  0,   0,  67,  -25, 2258, 1672],
+  ['E. €8–€9.99',  'D. 30-40%',  2,  1,  9999,   0.00, 3.50,  3.50,  null,50,  7,   0,  50,  0,  50,  -38, 784,  490],
+  ['F. €10–€14.99','A. <10%',    6,  4,  6678,   1.94, 3.89,  1.94,  76,  50,  22,  0,  0,   33, 67,  -7,  1960, 1818],
+  ['F. €10–€14.99','B. 10-20%',  18, 17, 5590,   2.56, 5.78,  3.22,  163, 56,  26,  0,  6,   22, 67,  -15, 2653, 2253],
+  ['F. €10–€14.99','D. 30-40%',  1,  1,  119,    0.67, 5.67,  5.00,  750, 100, 14,  0,  100, 0,  0,   -33, 1658, 1105],
+  ['G. €15+',      'A. <10%',    6,  5,  9999,   0.00, 0.94,  0.94,  null,33,  57,  0,  0,   0,  100, -8,  2937, 2751],
+  ['G. €15+',      'B. 10-20%',  18, 16, 7257,   0.52, 1.50,  0.98,  147, 56,  108, 11, 0,   0,  89,  -13, 3099, 2662],
+];
+
+// ============================================================
+// DATA SET 2 — From→To price band matrix (20 rows)
+// [from_band, to_band, n, avg_disc, sub7, p7_14, p15_21, still]
+// ============================================================
+const PATH = [
+  ['A. <€2',       'A. <€2',       1,  50, 100, 0,  0,  0],
+  ['B. €2–€3.99',  'A. <€2',       9,  50, 33,  44, 11, 11],
+  ['B. €2–€3.99',  'B. €2–€3.99',  11, 22, 0,   18, 36, 27],
+  ['C. €4–€5.99',  'A. <€2',       2,  74, 100, 0,  0,  0],
+  ['C. €4–€5.99',  'B. €2–€3.99',  25, 26, 28,  24, 8,  40],
+  ['C. €4–€5.99',  'C. €4–€5.99',  9,  12, 0,   11, 11, 78],
+  ['D. €6–€7.99',  'A. <€2',       1,  72, 0,   0,  0,  100],
+  ['D. €6–€7.99',  'B. €2–€3.99',  10, 48, 50,  20, 10, 20],
+  ['D. €6–€7.99',  'C. €4–€5.99',  22, 18, 5,   45, 18, 23],
+  ['D. €6–€7.99',  'D. €6–€7.99',  15, 12, 7,   13, 13, 67],
+  ['E. €8–€9.99',  'B. €2–€3.99',  1,  56, 0,   100,0,  0],
+  ['E. €8–€9.99',  'C. €4–€5.99',  4,  40, 25,  75, 0,  0],
+  ['E. €8–€9.99',  'D. €6–€7.99',  15, 19, 0,   33, 27, 40],
+  ['E. €8–€9.99',  'E. €8–€9.99',  2,  5,  0,   0,  0,  100],
+  ['F. €10–€14.99','C. €4–€5.99',  1,  58, 100, 0,  0,  0],
+  ['F. €10–€14.99','E. €8–€9.99',  11, 18, 0,   36, 9,  45],
+  ['F. €10–€14.99','F. €10–€14.99',12, 11, 0,   8,  25, 58],
+  ['G. €15+',      'E. €8–€9.99',  1,  38, 0,   100,0,  0],
+  ['G. €15+',      'F. €10–€14.99',13, 15, 0,   8,  23, 69],
+  ['G. €15+',      'G. €15+',      24, 12, 8,   0,  0,  92],
+];
+
+// ============================================================
+// DATA SET 3 — Category data (87 rows) for calculator
+// [category, price_band, disc_band, n, ros_pct, sub7, p7_14, still, post_ros]
+// ============================================================
+const CAT = [
+  ['BREAKFAST','B. €2–€3.99','E. 40%+',2,400,50,0,0,50],
+  ['BREAKFAST','D. €6–€7.99','B. 10-20%',1,null,0,0,100,0],
+  ['BREAKFAST','E. €8–€9.99','A. <10%',1,null,0,0,100,0],
+  ['BREAKFAST','E. €8–€9.99','D. 30-40%',1,null,0,0,100,0],
+  ['BREAKFAST','F. €10–€14.99','B. 10-20%',5,136,0,0,40,7.53],
+  ['BREAKFAST','F. €10–€14.99','D. 30-40%',1,750,0,100,0,5.67],
+  ['BREAKFAST','G. €15+','B. 10-20%',1,null,0,0,100,0],
+  ['DRINKS','A. <€2','C. 20-30%',1,248,0,100,0,26.67],
+  ['DRINKS','A. <€2','E. 40%+',5,209,60,0,20,60.53],
+  ['DRINKS','B. €2–€3.99','B. 10-20%',2,209,0,0,100,7.5],
+  ['DRINKS','B. €2–€3.99','C. 20-30%',4,89,0,0,25,10.25],
+  ['DRINKS','B. €2–€3.99','D. 30-40%',2,112,0,0,100,7.5],
+  ['DRINKS','B. €2–€3.99','E. 40%+',5,460,40,60,0,57.47],
+  ['DRINKS','C. €4–€5.99','B. 10-20%',5,84,0,40,20,14.07],
+  ['DRINKS','C. €4–€5.99','C. 20-30%',4,262,0,75,25,16],
+  ['DRINKS','C. €4–€5.99','E. 40%+',1,690,100,0,0,102.67],
+  ['DRINKS','D. €6–€7.99','A. <10%',1,136,0,100,0,17.33],
+  ['DRINKS','D. €6–€7.99','B. 10-20%',6,80,17,17,50,7.94],
+  ['DRINKS','D. €6–€7.99','C. 20-30%',2,82,0,0,100,5],
+  ['DRINKS','D. €6–€7.99','D. 30-40%',2,114,0,50,0,7],
+  ['DRINKS','E. €8–€9.99','B. 10-20%',2,175,0,50,0,23.5],
+  ['DRINKS','E. €8–€9.99','C. 20-30%',3,91,0,0,67,6.33],
+  ['DRINKS','E. €8–€9.99','D. 30-40%',1,null,0,100,0,7],
+  ['DRINKS','F. €10–€14.99','A. <10%',1,141,0,0,0,13.67],
+  ['DRINKS','F. €10–€14.99','B. 10-20%',2,147,0,0,50,6.17],
+  ['DRINKS','G. €15+','A. <10%',1,null,0,0,100,0],
+  ['DRINKS','G. €15+','B. 10-20%',1,null,0,0,100,0.67],
+  ['HEALTH','B. €2–€3.99','B. 10-20%',1,null,0,0,100,12.33],
+  ['HEALTH','B. €2–€3.99','C. 20-30%',1,623,100,0,0,31.33],
+  ['HEALTH','B. €2–€3.99','E. 40%+',1,2030,100,0,0,71],
+  ['HEALTH','C. €4–€5.99','B. 10-20%',1,145,0,100,0,25.33],
+  ['HEALTH','D. €6–€7.99','C. 20-30%',1,null,0,0,100,8],
+  ['HEALTH','F. €10–€14.99','B. 10-20%',1,103,0,100,0,23.67],
+  ['HEALTH','G. €15+','A. <10%',1,null,0,0,100,4.67],
+  ['KIDS','B. €2–€3.99','B. 10-20%',3,51,0,33,67,6.44],
+  ['KIDS','B. €2–€3.99','C. 20-30%',1,100,0,0,100,3.33],
+  ['KIDS','C. €4–€5.99','B. 10-20%',1,233,0,0,0,6.67],
+  ['KIDS','C. €4–€5.99','C. 20-30%',2,130,0,50,0,16.83],
+  ['KIDS','C. €4–€5.99','D. 30-40%',1,433,0,0,100,10.67],
+  ['KIDS','D. €6–€7.99','A. <10%',1,null,0,0,100,0],
+  ['KIDS','F. €10–€14.99','B. 10-20%',2,null,0,0,100,0],
+  ['KIDS','G. €15+','B. 10-20%',1,null,0,0,100,0],
+  ['MEALS','B. €2–€3.99','C. 20-30%',4,112,0,0,25,12.42],
+  ['MEALS','B. €2–€3.99','E. 40%+',1,687,100,0,0,60.33],
+  ['MEALS','C. €4–€5.99','B. 10-20%',2,21,0,0,50,3.83],
+  ['MEALS','D. €6–€7.99','A. <10%',1,null,0,0,100,0],
+  ['MEALS','G. €15+','B. 10-20%',2,null,0,0,100,0],
+  ['PANTRY','A. <€2','D. 30-40%',1,55,0,0,100,10.33],
+  ['PANTRY','A. <€2','E. 40%+',2,null,50,50,0,54.67],
+  ['PANTRY','B. €2–€3.99','B. 10-20%',2,170,0,50,0,18],
+  ['PANTRY','B. €2–€3.99','C. 20-30%',4,99,0,50,25,8.83],
+  ['PANTRY','B. €2–€3.99','D. 30-40%',1,25,0,0,100,1.67],
+  ['PANTRY','B. €2–€3.99','E. 40%+',1,null,100,0,0,75.33],
+  ['PANTRY','C. €4–€5.99','A. <10%',3,null,0,0,100,0],
+  ['PANTRY','C. €4–€5.99','B. 10-20%',1,122,0,0,0,6.67],
+  ['PANTRY','D. €6–€7.99','B. 10-20%',4,10,0,0,100,1.83],
+  ['PANTRY','E. €8–€9.99','A. <10%',1,null,0,0,100,0],
+  ['PANTRY','F. €10–€14.99','A. <10%',3,null,0,0,67,1],
+  ['PANTRY','F. €10–€14.99','B. 10-20%',2,null,0,0,100,0],
+  ['PANTRY','G. €15+','B. 10-20%',1,null,0,0,100,0.33],
+  ['PET FOOD','C. €4–€5.99','B. 10-20%',1,79,0,0,0,11.33],
+  ['PET FOOD','D. €6–€7.99','C. 20-30%',1,333,0,100,0,13],
+  ['PET FOOD','F. €10–€14.99','B. 10-20%',1,11,0,0,0,10],
+  ['SEASONAL','B. €2–€3.99','C. 20-30%',1,178,0,100,0,16.67],
+  ['SEASONAL','C. €4–€5.99','B. 10-20%',2,112,0,50,50,12.33],
+  ['SNACKS','A. <€2','E. 40%+',4,919,50,50,0,75.58],
+  ['SNACKS','B. €2–€3.99','C. 20-30%',1,275,100,0,0,15],
+  ['SNACKS','B. €2–€3.99','D. 30-40%',5,323,20,60,20,29.87],
+  ['SNACKS','B. €2–€3.99','E. 40%+',5,425,60,0,40,48.27],
+  ['SNACKS','C. €4–€5.99','A. <10%',3,51,0,33,67,11.78],
+  ['SNACKS','C. €4–€5.99','B. 10-20%',3,153,0,100,0,22.11],
+  ['SNACKS','C. €4–€5.99','D. 30-40%',2,400,50,50,0,36.83],
+  ['SNACKS','C. €4–€5.99','E. 40%+',2,282,50,50,0,50.67],
+  ['SNACKS','D. €6–€7.99','A. <10%',1,52,0,0,100,11.67],
+  ['SNACKS','D. €6–€7.99','B. 10-20%',3,119,0,33,0,16.33],
+  ['SNACKS','D. €6–€7.99','C. 20-30%',5,107,0,40,20,14.47],
+  ['SNACKS','E. €8–€9.99','A. <10%',3,109,0,33,67,2.56],
+  ['SNACKS','E. €8–€9.99','B. 10-20%',2,239,0,100,0,21.67],
+  ['SNACKS','F. €10–€14.99','A. <10%',2,11,0,0,100,3.33],
+  ['SNACKS','F. €10–€14.99','B. 10-20%',3,47,0,0,100,2.78],
+  ['SNACKS','G. €15+','A. <10%',4,null,0,0,100,0.25],
+  ['SNACKS','G. €15+','B. 10-20%',9,142,22,0,78,1.44],
+];
+
+// ============================================================
+// LOOKUPS
+// ============================================================
+const PRICE_BANDS = ['A. <€2','B. €2–€3.99','C. €4–€5.99','D. €6–€7.99','E. €8–€9.99','F. €10–€14.99','G. €15+'];
+const DISC_BANDS  = ['A. <10%','B. 10-20%','C. 20-30%','D. 30-40%','E. 40%+'];
+const DISC_LABELS = ['<10%','10–20%','20–30%','30–40%','40%+'];
+const DISC_MIDS   = [5,15,25,35,50];
+const BAND_LABELS = ['<€2','€2–€4','€4–€6','€6–€8','€8–€10','€10–€15','€15+'];
+
+// Standard TGTG price points (.49 and .99 endings)
+const PRICE_POINTS = [
+  0.99,1.49,1.99,2.49,2.99,3.49,3.99,4.49,4.99,5.49,5.99,
+  6.49,6.99,7.49,7.99,8.49,8.99,9.49,9.99,
+  10.49,10.99,11.49,11.99,12.49,12.99,13.49,13.99,14.49,14.99,
+  15.49,15.99,16.49,16.99,17.49,17.99,18.49,18.99,19.49,19.99
+];
+
+const LOOKUP = {}; RAW.forEach(r => { LOOKUP[r[0]+'|'+r[1]] = r; });
+const PATH_LOOKUP = {}; PATH.forEach(r => { PATH_LOOKUP[r[0]+'|'+r[1]] = r; });
+const CAT_LOOKUP  = {}; CAT.forEach(r => { CAT_LOOKUP[r[0]+'|'+r[1]+'|'+r[2]] = r; });
+
+function getRow(b,d){ return LOOKUP[b+'|'+d]||null; }
+function getPath(f,t){ return PATH_LOOKUP[f+'|'+t]||null; }
+function getCat(c,b,d){ return CAT_LOOKUP[c+'|'+b+'|'+d]||null; }
+
+function getDiscBand(pct){
+  if(pct<10) return 'A. <10%'; if(pct<20) return 'B. 10-20%'; if(pct<30) return 'C. 20-30%';
+  if(pct<40) return 'D. 30-40%'; return 'E. 40%+';
+}
+
+// Populate current price dropdown
+(function buildPriceDropdown(){
+  const sel = document.getElementById('inp-price');
+  PRICE_POINTS.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = `€${p.toFixed(2)}`;
+    sel.appendChild(o);
+  });
+})();
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function showTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['matrix','path','calc','method'][i]===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='matrix'&&!window._chartsBuilt){ buildChart(); window._chartsBuilt=true; }
+}
+// Build chart on first load since matrix tab is default
+window.addEventListener('DOMContentLoaded',()=>{ buildChart(); window._chartsBuilt=true; });
+
+// ============================================================
+// HELPER: render a cell box
+// ============================================================
+function cellBox(n, sub7, p714, p1521, still, extraMeta) {
+  const low = n <= 3;
+  let h = `<div class="cb${low?' ln':''}">`;
+  if(low) h += `<span class="lnb">n=${n} — low data</span>`;
+  h += `<div class="ob"><div class="s7" style="width:${sub7}%"></div><div class="s14" style="width:${p714}%"></div><div class="s21" style="width:${p1521}%"></div><div class="ss" style="width:${still}%"></div></div>`;
+  h += `<div class="ols">`;
+  if(sub7>0)  h+=`<span class="ol og">${sub7}% &lt;7d</span>`;
+  if(p714>0)  h+=`<span class="ol oy">${p714}% 7–14d</span>`;
+  if(p1521>0) h+=`<span class="ol om">${p1521}% 15–21d</span>`;
+  if(still>0) h+=`<span class="ol or">${still}% 22+</span>`;
+  h += `</div><div class="cm">n=${n}${extraMeta?'&nbsp;·&nbsp;'+extraMeta:''}</div></div>`;
+  return h;
+}
+
+// ============================================================
+// BUILD MATRIX TAB
+// ============================================================
+(function buildMatrix(){
+  const tbody = document.getElementById('matrix-body');
+  PRICE_BANDS.forEach(band => {
+    const tr = document.createElement('tr');
+    let h = `<td class="bl">${band.replace(/^[A-G]\. /,'')}</td>`;
+    DISC_BANDS.forEach(disc => {
+      const r = getRow(band, disc);
+      if(!r){ h+=`<td><div class="ce">—</div></td>`; return; }
+      const dtc = r[10] < 9999 ? `~${r[10]}d avg` : null;
+      h += `<td>${cellBox(r[2], r[11], r[12], r[13], r[14], dtc)}</td>`;
+    });
+    tr.innerHTML = h; tbody.appendChild(tr);
+  });
+})();
+
+// ============================================================
+// BUILD PATH MATRIX TAB
+// ============================================================
+(function buildPath(){
+  const tbody = document.getElementById('path-body');
+  PRICE_BANDS.forEach((fromBand, fi) => {
+    const tr = document.createElement('tr');
+    const fl = fromBand.replace(/^[A-G]\. /,'');
+    let h = `<td class="bl">${fl}</td>`;
+    PRICE_BANDS.forEach((toBand, ti) => {
+      if(ti > fi){
+        // Price increase — not applicable
+        h += `<td class="na-cell"><div class="ce" style="font-size:10px;color:#e0e0e0">↑ price increase</div></td>`;
+      } else {
+        const r = getPath(fromBand, toBand);
+        if(!r){
+          h += `<td><div class="ce">—</div></td>`;
+        } else {
+          const extra = `avg ${r[3]}% discount`;
+          const diag = ti === fi;
+          const discLabel = `<span class="disc-badge">${r[3]}% avg discount</span>`;
+          h += `<td style="${diag?'background:#fffdf5;':''}">${discLabel}${cellBox(r[2], r[4], r[5], r[6], r[7], null)}</td>`;
+        }
+      }
+    });
+    tr.innerHTML = h; tbody.appendChild(tr);
+  });
+})();
+
+// ============================================================
+// SVG BAR CHART (RoS improvement only)
+// ============================================================
+function buildChart(){
+  const rosVals = DISC_BANDS.map(disc => {
+    let n=0,v=0;
+    RAW.filter(r=>r[1]===disc&&r[8]!==null).forEach(r=>{n+=r[2];v+=r[8]*r[2];});
+    return n>0?Math.round(v/n):null;
+  });
+  const W=480,H=200,pL=44,pR=14,pT=14,pB=38;
+  const cW=W-pL-pR, cH=H-pT-pB;
+  const bW=Math.floor(cW/5*0.52), bG=cW/5;
+  const yMax=700;
+  function yp(v){ return pT+cH*(1-v/yMax); }
+  const ticks=[0,200,400,600];
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg">`;
+  ticks.forEach(t=>{
+    const y=yp(t);
+    s+=`<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="${t===0?'#ccc':'#f0f0f0'}" stroke-width="1"/>`;
+    s+=`<text x="${pL-5}" y="${y+4}" text-anchor="end" fill="#aaa" font-size="9">${t}%</text>`;
+  });
+  rosVals.forEach((v,i)=>{
+    if(v===null) return;
+    const x=pL+bG*i+(bG-bW)/2, bH=v/yMax*cH, y=yp(v);
+    const clr = v<200?'#85c9a0':v<350?'#03A97B':'#00615F';
+    s+=`<rect x="${x}" y="${y}" width="${bW}" height="${bH}" rx="3" fill="${clr}"/>`;
+    s+=`<text x="${x+bW/2}" y="${y-5}" text-anchor="middle" fill="#444" font-size="9" font-weight="700">+${v}%</text>`;
+  });
+  const nVals = DISC_BANDS.map(disc=>{let n=0;RAW.filter(r=>r[1]===disc&&r[8]!==null).forEach(r=>n+=r[2]);return n;});
+  nVals.forEach((n,i)=>{
+    const x=pL+bG*i+bG/2;
+    s+=`<text x="${x}" y="${H-pB+13}" text-anchor="middle" fill="#555" font-size="10">${DISC_LABELS[i]}</text>`;
+    s+=`<text x="${x}" y="${H-pB+25}" text-anchor="middle" fill="#bbb" font-size="9">n=${n}</text>`;
+  });
+  s+=`<line x1="${pL}" y1="${pT}" x2="${pL}" y2="${pT+cH}" stroke="#ccc" stroke-width="1"/>`;
+  s+=`<line x1="${pL}" y1="${pT+cH}" x2="${W-pR}" y2="${pT+cH}" stroke="#ccc" stroke-width="1"/>`;
+  s+=`</svg>`;
+  document.getElementById('chart-ros-wrap').innerHTML = s;
+}
+
+// ============================================================
+// CALCULATOR
+// ============================================================
+function getPriceBand(p){
+  if(p<2) return 'A. <€2'; if(p<4) return 'B. €2–€3.99'; if(p<6) return 'C. €4–€5.99';
+  if(p<8) return 'D. €6–€7.99'; if(p<10) return 'E. €8–€9.99'; if(p<15) return 'F. €10–€14.99';
+  return 'G. €15+';
+}
+function cdBadge(cd){
+  if(cd===null) return `<span class="bdg br">No data</span>`;
+  if(cd<7)  return `<span class="bdg bg">✓ &lt;7 days — Ideal</span>`;
+  if(cd<15) return `<span class="bdg by">✓ 7–14 days — Acceptable</span>`;
+  if(cd<22) return `<span class="bdg bo">15–21 days</span>`;
+  return `<span class="bdg br">22+ still excess</span>`;
+}
+
+function runCalc(){
+  const price = parseFloat(document.getElementById('inp-price').value);
+  const stock = parseFloat(document.getElementById('inp-stock').value);
+  const ros   = parseFloat(document.getElementById('inp-ros').value);
+  const cat   = document.getElementById('inp-cat').value;
+  const out   = document.getElementById('calc-output');
+
+  if(isNaN(price)||isNaN(stock)||isNaN(ros)||price<=0||stock<=0||ros<0){
+    out.innerHTML=`<div class="ph"><span style="color:#c0453f">Please fill in current price, stock, and RoS (use 0 if no sales)</span></div>`; return;
+  }
+
+  const fromBand = getPriceBand(price);
+  const curCd = ros>0 ? Math.round(stock/ros) : '∞';
+  const curRev = (stock*price).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const catLabel = cat ? ` · ${cat}` : '';
+
+  let html = `<div class="cs">
+    <div><div class="csl">Current cover days</div><div class="csv">${curCd==='∞'?'∞ (stuck)':curCd+' days'}</div></div>
+    <div><div class="csl">Revenue at current price</div><div class="csv">€${curRev}</div></div>
+    <div><div class="csl">Price band${catLabel}</div><div class="csv">${fromBand.replace(/^[A-G]\. /,'')}</div></div>
+  </div>`;
+
+  // ── Individual price rows, highest→lowest (smallest→biggest discount) ───
+  const allTargets = PRICE_POINTS.filter(p => {
+    const d = (price - p) / price * 100;
+    return p < price - 0.01 && d <= 65;
+  }).slice().reverse(); // highest price first
+
+  // Pre-compute all row data (including dtc) for both the callout and the table
+  const rows = allTargets.map(newPrice => {
+    const discPct     = (price - newPrice) / price * 100;
+    const discBand    = getDiscBand(discPct);
+    const landingBand = getPriceBand(newPrice);
+    const cellKey     = landingBand + '|' + discBand;
+    const catRow      = cat ? getCat(cat, landingBand, discBand) : null;
+    const row         = catRow || getRow(landingBand, discBand);
+    if(!row) return null;
+    const usingCat = !!catRow;
+    let rosPct, postRos, sub7=0, p714=0, p1521=0, still=0, n;
+    if(usingCat){
+      n=catRow[3]; rosPct=catRow[4]; sub7=catRow[5]; p714=catRow[6]; still=catRow[7]; postRos=catRow[8];
+      p1521 = Math.max(0, 100 - sub7 - p714 - still);
+    } else {
+      n=row[2]; rosPct=row[8]; postRos=row[6]; sub7=row[11]; p714=row[12]; p1521=row[13]; still=row[14];
+    }
+    const expRos = (ros>0 && rosPct!==null) ? Math.round(ros*(1+rosPct/100)*10)/10 : (postRos>0?postRos:null);
+    const dtc    = expRos!==null && expRos>0 ? Math.round(stock/expRos) : null;
+    return { newPrice, discPct, discBand, landingBand, cellKey, row, catRow, usingCat,
+             rosPct, postRos, sub7, p714, p1521, still, n, expRos, dtc };
+  }).filter(Boolean);
+
+  if(rows.length === 0){
+    html += `<div class="ph" style="flex-direction:column;gap:8px;">
+      <span>No historical data found for any price point below €${price.toFixed(2)}</span>
+      <span style="font-size:11px;color:var(--gm);">Try "All categories" or check the Cover Day Outcomes tab for directional guidance.</span>
+    </div>`;
+    out.innerHTML = html; return;
+  }
+
+  // ── Summary callout ─────────────────────────────────────────────────────
+  const acceptable = rows.find(r => r.dtc !== null && r.dtc < 15);
+  const ideal      = rows.find(r => r.dtc !== null && r.dtc < 7);
+  const bestRow    = rows.filter(r=>r.dtc!==null).sort((a,b)=>a.dtc-b.dtc)[0] || null;
+
+  const fmt2 = v => (stock*v).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  let callout = `<div style="background:white;border-radius:8px;padding:16px 20px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px;border-left:4px solid var(--mg);">
+    <div style="font-size:13px;font-weight:700;color:var(--dg);margin-bottom:13px;">💡 Recommended markdown for this item</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">`;
+
+  // Acceptable card
+  if(acceptable){
+    callout += `<div style="background:#f0faf6;border-radius:6px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--gm);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">Minimum for &lt;14 days ✓ Acceptable</div>
+      <div style="font-size:22px;font-weight:700;color:var(--dg);">€${acceptable.newPrice.toFixed(2)}</div>
+      <div style="font-size:12px;color:#555;margin-top:3px;">${Math.round(acceptable.discPct)}% off · est. <strong>${acceptable.dtc} days</strong> to clear</div>
+      <div style="font-size:12px;color:#555;">Revenue: €${fmt2(acceptable.newPrice)}</div>
+    </div>`;
+  } else {
+    callout += `<div style="background:#fff8e1;border-radius:6px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--gm);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">Minimum for &lt;14 days</div>
+      <div style="font-size:13px;color:#b08a00;margin-top:4px;">Not achievable with standard price points${bestRow?` — best est. is ${bestRow.dtc} days at €${bestRow.newPrice.toFixed(2)}`:''}</div>
+    </div>`;
+  }
+
+  // Ideal card
+  if(ideal){
+    const revDiff = acceptable && acceptable.newPrice !== ideal.newPrice
+      ? Math.round((stock * acceptable.newPrice) - (stock * ideal.newPrice)) : null;
+    const daysFaster = acceptable && acceptable.newPrice !== ideal.newPrice
+      ? acceptable.dtc - ideal.dtc : null;
+    callout += `<div style="background:#f0faf6;border-radius:6px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--gm);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">Minimum for &lt;7 days ✓ Ideal</div>
+      <div style="font-size:22px;font-weight:700;color:var(--dg);">€${ideal.newPrice.toFixed(2)}</div>
+      <div style="font-size:12px;color:#555;margin-top:3px;">${Math.round(ideal.discPct)}% off · est. <strong>${ideal.dtc} days</strong> to clear</div>
+      <div style="font-size:12px;color:#555;">Revenue: €${fmt2(ideal.newPrice)}</div>
+    </div>`;
+  } else {
+    callout += `<div style="background:#fef4f4;border-radius:6px;padding:12px 14px;">
+      <div style="font-size:10px;color:var(--gm);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">Minimum for &lt;7 days</div>
+      <div style="font-size:13px;color:#c0453f;margin-top:4px;">Not achievable${acceptable?' — acceptable target is the best option':' with available data'}</div>
+    </div>`;
+  }
+
+  callout += `</div>`;
+
+  // Trade-off note when acceptable ≠ ideal
+  if(acceptable && ideal && acceptable.newPrice !== ideal.newPrice){
+    const revLoss  = Math.round((stock * acceptable.newPrice) - (stock * ideal.newPrice));
+    const daysFaster = acceptable.dtc - ideal.dtc;
+    const verdict  = revLoss > 300 ? 'Significant revenue cost — consider whether the speed gain is worth it for this item.' : 'Modest revenue cost for a meaningful speed-up.';
+    callout += `<div style="font-size:12px;color:#555;border-top:1px solid #edf5f1;padding-top:10px;line-height:1.6;">
+      Going to the ideal target (€${ideal.newPrice.toFixed(2)}) clears stock <strong>~${daysFaster} day${daysFaster!==1?'s':''} faster</strong> than the acceptable target (€${acceptable.newPrice.toFixed(2)}), at a revenue cost of <strong>€${revLoss.toLocaleString('nl-NL')}</strong>. ${verdict}
+    </div>`;
+  } else if(acceptable && ideal && acceptable.newPrice === ideal.newPrice){
+    callout += `<div style="font-size:12px;color:#555;border-top:1px solid #edf5f1;padding-top:10px;">
+      Same price point achieves both targets — <strong>€${acceptable.newPrice.toFixed(2)}</strong> is the clear recommended action.
+    </div>`;
+  }
+
+  callout += `</div>`;
+  html += callout;
+
+  // Band coverage strength (for header label on data groups)
+  const BAND_COVERAGE = {
+    'B. €2–€3.99':'strong','C. €4–€5.99':'strong','D. €6–€7.99':'good',
+    'F. €10–€14.99':'moderate','G. €15+':'limited','A. <€2':'limited','E. €8–€9.99':'limited'
+  };
+  const COVERAGE_LABEL = { strong:'✓ strong coverage', good:'✓ good coverage', moderate:'⚠ moderate coverage', limited:'⚠ limited data' };
+  const COVERAGE_COLOR = { strong:'#03A97B', good:'#5baa87', moderate:'#e6a817', limited:'#c0453f' };
+
+  html += `<div class="st-wrap"><table style="width:100%;min-width:620px;border-collapse:collapse;background:white;">
+    <thead><tr>
+      <th style="text-align:left;width:100px">New Price</th>
+      <th style="width:110px">Discount</th>
+      <th style="width:85px" class="hide-sm">Est. RoS/day</th>
+      <th style="width:95px">Days to Clear</th>
+      <th style="width:140px">Outcome</th>
+      <th style="width:95px">Revenue</th>
+      <th style="text-align:left;min-width:180px">Historical Confidence</th>
+    </tr></thead><tbody>`;
+
+  let lastCellKey = null;
+  rows.forEach(r => {
+    const { newPrice, discPct, discBand, landingBand, cellKey,
+            usingCat, sub7, p714, p1521, still, n, expRos, dtc } = r;
+    const lowData = n <= 3;
+
+    // ── Group header when entering a new data cell ──
+    if(cellKey !== lastCellKey){
+      const cov = BAND_COVERAGE[landingBand] || 'limited';
+      const covLabel = COVERAGE_LABEL[cov];
+      const covColor = COVERAGE_COLOR[cov];
+      html += `<tr class="grp-hd"><td colspan="7">
+        ${landingBand.replace(/^[A-G]\. /,'')} · ${discBand.replace(/^[A-E]\. /,'')} discount
+        <span style="float:right;color:${covColor};font-weight:700;">${covLabel}</span>
+      </td></tr>`;
+      lastCellKey = cellKey;
+    }
+
+    const hi = dtc!==null && dtc<15;
+    const hiIdeal = dtc!==null && dtc<7;
+    const rowBg = hiIdeal ? 'background:#d4f0e5;' : (hi ? 'background:#e8f5f0;' : '');
+    const rev = (stock*newPrice).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+    const catTag = usingCat
+      ? `<span class="lnb" style="background:#e8f5f0;color:var(--dg);display:inline-block;margin-top:2px;">${cat}</span>`
+      : (cat ? `<span class="lnb" style="display:inline-block;margin-top:2px;">overall</span>` : '');
+    const lowTag = lowData ? `<span class="lnb" style="display:inline-block;margin-top:2px;">n=${n} ⚠</span>` : '';
+
+    const confParts = [
+      sub7>0  ? `<span class="og">${sub7}% &lt;7d</span>` : '',
+      p714>0  ? `<span class="oy">${p714}% 7–14d</span>` : '',
+      p1521>0 ? `<span class="om">${p1521}% 15–21d</span>` : '',
+      still>0 ? `<span class="or">${still}% 22+</span>` : ''
+    ].filter(Boolean).join(' ');
+    const confHtml = `
+      <div class="ob" style="height:7px;margin-bottom:3px;">
+        <div class="s7" style="width:${sub7}%"></div>
+        <div class="s14" style="width:${p714}%"></div>
+        <div class="s21" style="width:${p1521}%"></div>
+        <div class="ss" style="width:${still}%"></div>
+      </div>
+      <div style="font-size:10px;line-height:1.6;">${confParts}</div>
+      <div style="font-size:10px;color:var(--gm);">n=${n}${lowData?' — directional':''}</div>`;
+
+    html += `<tr style="${rowBg}border-bottom:1px solid #f0f0f0;">
+      <td style="padding:8px 11px;"><strong style="font-size:14px;color:var(--dg);">€${newPrice.toFixed(2)}</strong></td>
+      <td style="text-align:center;padding:8px 11px;"><strong>${Math.round(discPct)}% off</strong>${catTag}${lowTag}</td>
+      <td style="text-align:center;padding:8px 11px;font-size:12px;" class="hide-sm">${expRos!==null?expRos+'/day':'–'}</td>
+      <td style="text-align:center;padding:8px 11px;">${dtc!==null?`<span class="cdv">${dtc}</span>`:'–'}</td>
+      <td style="text-align:center;padding:8px 11px;">${dtc!==null?cdBadge(dtc):`<span class="bdg bo">No est.</span>`}</td>
+      <td style="text-align:center;padding:8px 11px;font-size:12px;">€${rev}</td>
+      <td style="padding:8px 11px;">${confHtml}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  html += `<div class="note" style="margin-top:10px;">
+    <strong>Section headers</strong> show the data pool — rows in the same section draw from the same historical events (same landing price band + discount depth), so their confidence bars are identical. The individual price and revenue in each row are what differ.
+    Green = est. &lt;14 days · Dark green = est. &lt;7 days · ✓ strong/good = reliable estimate · ⚠ limited = directional only.
+  </div>`;
+
+  out.innerHTML = html;
+}
+</script>
+</body>
+</html>
