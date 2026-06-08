@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - '**.html'
-  workflow_dispatch:
 
 jobs:
   encrypt:
@@ -17,12 +16,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install staticrypt
-        run: npm install -g staticrypt
+        run: npm install -g staticrypt@2
 
       - name: Encrypt all HTML files
         run: |
           find . -name "*.html" -not -path "./.github/*" | while read file; do
-            staticrypt "$file" -p "${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}" -o "$file"
+            echo "Encrypting $file"
+            staticrypt "$file" -p "${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}" -o "$file" --short
           done
 
       - name: Commit encrypted files
@@ -30,5 +30,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add -A
-          git diff --staged --quiet || git commit -m "Auto-encrypt HTML files"
+          git diff --staged --quiet || git commit -m "Auto-encrypt HTML files [skip ci]"
           git push
