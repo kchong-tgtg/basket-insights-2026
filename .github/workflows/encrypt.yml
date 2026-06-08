@@ -7,6 +7,7 @@ on:
     paths:
       - '**.html'
   workflow_dispatch:
+
 jobs:
   encrypt:
     runs-on: ubuntu-latest
@@ -15,18 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Install staticrypt
-        run: npm install -g staticrypt@2
+        run: npm install -g staticrypt@3
 
       - name: Encrypt all HTML files
         run: |
           find . -name "*.html" -not -path "./.github/*" | while read file; do
             echo "Encrypting $file"
-            staticrypt "$file" -p "${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}" -o "$file" --short
+            dir=$(dirname "$file")
+            base=$(basename "$file")
+            staticrypt encrypt "$file" --password "${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}" -d "$dir" --short
           done
 
       - name: Commit encrypted files
