@@ -21,9 +21,12 @@ jobs:
 
       - name: Encrypt all HTML files
         env:
-          STATICRYPT_PASSWORD: ${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}
+          PASS: ${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}
         run: |
-          find . -type f -name "*.html" -not -path "./.github/*" -exec staticrypt {} -o {} --config false \;
+          find . -type f -name "*.html" -not -path "./.github/*" | while read file; do
+            echo "Encrypting $file"
+            staticrypt "$file" "$PASS" -o "$file" --config false
+          done
 
       - name: Commit encrypted files
         run: |
