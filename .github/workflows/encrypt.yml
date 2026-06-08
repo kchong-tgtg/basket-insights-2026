@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - '**.html'
-
+  workflow_dispatch:
 jobs:
   encrypt:
     runs-on: ubuntu-latest
