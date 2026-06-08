@@ -26,7 +26,12 @@ jobs:
           find . -type f -name "*.html" -not -path "./.github/*" | while read file; do
             echo "Encrypting $file"
             dir=$(dirname "$file")
-            staticrypt "$file" -p "$PASS" -d "$dir" --config false --short
+            title=$(grep -oP '(?<=<title>)[^<]+' "$file" | head -1)
+            staticrypt "$file" -p "$PASS" -d "$dir" --config false --short \
+              --template-title "${title:-TGTG Basket NL Insights}" \
+              --template-color-primary "#00615F" \
+              --template-color-secondary "#F9F3F0" \
+              --template-button "UNLOCK"
           done
 
       - name: Commit encrypted files
