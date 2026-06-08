@@ -25,7 +25,8 @@ jobs:
         run: |
           find . -type f -name "*.html" -not -path "./.github/*" | while read file; do
             echo "Encrypting $file"
-            staticrypt "$file" "$PASS" -o "$file" --config false
+            dir=$(dirname "$file")
+            staticrypt "$file" -p "$PASS" -d "$dir" --config false --short
           done
 
       - name: Commit encrypted files
