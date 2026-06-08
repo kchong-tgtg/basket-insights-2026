@@ -21,7 +21,7 @@ jobs:
 
       - name: Encrypt all HTML files
         env:
-          PASS: ${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}
+          PASS: ${{ secrets.STATICRYPT_PASSWORD }}
         run: |
           find . -type f -name "*.html" -not -path "./.github/*" | while read file; do
             echo "Encrypting $file"
