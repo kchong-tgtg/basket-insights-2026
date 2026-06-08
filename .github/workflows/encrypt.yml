@@ -20,13 +20,10 @@ jobs:
         run: npm install -g staticrypt@3
 
       - name: Encrypt all HTML files
+        env:
+          STATICRYPT_PASSWORD: ${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}
         run: |
-          find . -name "*.html" -not -path "./.github/*" | while read file; do
-            echo "Encrypting $file"
-            dir=$(dirname "$file")
-            base=$(basename "$file")
-            staticrypt encrypt "$file" --password "${{ secrets.TGTG_KCHONG_STATICRYPT_PASSWORD }}" -d "$dir" --short
-          done
+          find . -type f -name "*.html" -not -path "./.github/*" -exec staticrypt {} -o {} --config false \;
 
       - name: Commit encrypted files
         run: |
