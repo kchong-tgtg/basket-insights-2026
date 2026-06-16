@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '**.html'
+  workflow_dispatch:
 
 jobs:
   encrypt:
@@ -14,20 +15,39 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Install staticrypt
         run: npm install -g staticrypt@3
 
-      - name: Encrypt all HTML files
+      - name: Encrypt HTML files
         env:
           PASS: ${{ secrets.STATICRYPT_PASSWORD }}
         run: |
-          find . -type f -name "*.html" -not -path "./.github/*" | while read file; do
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual run: find all HTML files but skip already-encrypted ones
+            files=$(find . -type f -name "*.html" -not -path "./.github/*")
+          else
+            # Push: only encrypt files changed in this commit
+            files=$(git diff --name-only HEAD~1 HEAD | grep '\.html$' | grep -v '\.github')
+          fi
+
+          echo "$files" | while read file; do
+            [ -z "$file" ] && continue
+            [ ! -f "$file" ] && continue
+
+            # Skip already-encrypted files
+            if grep -q "staticrypt" "$file"; then
+              echo "Skipping $file (already encrypted)"
+              continue
+            fi
+
             echo "Encrypting $file"
             dir=$(dirname "$file")
             title=$(grep -oP '(?<=<title>)[^<]+' "$file" | head -1)
             staticrypt "$file" -p "$PASS" -d "$dir" --config false --short \
-              --template-title "${title:-TGTG Basket NL Insights}" \
+              --template-title "${title:-NL Basket Insights}" \
               --template-color-primary "#00615F" \
               --template-color-secondary "#F9F3F0" \
               --template-button "UNLOCK"
