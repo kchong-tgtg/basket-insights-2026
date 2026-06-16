@@ -47,7 +47,7 @@ jobs:
             dir=$(dirname "$file")
             title=$(grep -oP '(?<=<title>)[^<]+' "$file" | head -1)
             staticrypt "$file" -p "$PASS" -d "$dir" --config false --short \
-              --template-title "${title:-Protected Page}" \
+              --template-title "${title:-NL Basket Insights}" \
               --template-color-primary "#00615F" \
               --template-color-secondary "#F9F3F0" \
               --template-button "UNLOCK"
