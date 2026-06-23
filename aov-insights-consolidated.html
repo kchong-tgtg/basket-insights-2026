@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NL Basket — Why AOV Went Up</title>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--dg:#00615F;--ag:#03A97B;--coral:#ff7973;--gold:#e0a44b;--blue:#3d7ea6;--purple:#9b6bbf;--bg:#F9F3F0;--ink:#1d2b2a;--mut:#5f7170;--card:#fff;--line:#e6ddd7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Rubik',system-ui,sans-serif;line-height:1.55}
+h1,h2,h3,h4{font-family:'Barlow Semi Condensed',sans-serif;letter-spacing:.2px;margin:0}
+header{background:var(--dg);color:#fff;padding:24px 32px 18px}
+header h1{font-size:30px}header .sub{opacity:.92;margin-top:4px;font-size:14.5px}
+.defbar{background:#013f3e;color:#dff0ee;padding:10px 32px;font-size:12px}
+.tabs{display:flex;gap:2px;background:#004e4c;padding:0 18px;flex-wrap:wrap}
+.tab{padding:11px 16px;color:#cfe6e3;cursor:pointer;font-family:'Barlow Semi Condensed';font-weight:600;font-size:14px;border-bottom:3px solid transparent}
+.tab .n{opacity:.6;margin-right:6px}
+.tab.active{color:#fff;border-bottom-color:var(--ag)}
+main{padding:22px 32px 60px;max-width:1160px;margin:0 auto}
+.panel{display:none}.panel.active{display:block}
+.headline{background:linear-gradient(100deg,#013f3e,#00615F);color:#fff;border-radius:14px;padding:20px 24px;margin-bottom:18px}
+.headline h2{font-size:21px;margin-bottom:6px}.headline p{margin:0;opacity:.93;font-size:14px}
+.grid{display:grid;gap:14px}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:880px){.g4,.g3{grid-template-columns:1fr 1fr}}
+.kcard{background:linear-gradient(135deg,#ffffff,#f3faf8);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.kcard .lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);font-family:'Barlow Semi Condensed';font-weight:600}
+.kcard .big{font-family:'Barlow Semi Condensed';font-size:32px;font-weight:700;line-height:1.05;color:var(--dg);margin-top:4px}
+.kcard .delta{font-size:13px;font-weight:600;margin-top:3px}.delta.up{color:var(--ag)}.delta.down{color:var(--coral)}
+.chartbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 18px 12px;margin:14px 0}
+.chartbox h3{font-size:17px;color:var(--dg)}.chartbox .cap{font-size:12px;color:var(--mut);margin:2px 0 12px}
+.cv{position:relative;height:340px}.cv.tall{height:460px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-family:'Barlow Semi Condensed';color:var(--mut);font-weight:600;background:#fbf7f4}
+tr:hover td{background:#fbf7f4}
+.note{background:#fff6f0;border-left:4px solid var(--coral);padding:12px 16px;border-radius:0 8px 8px 0;font-size:13.5px;margin:14px 0;color:#5a4540}
+.note.good{background:#eefaf5;border-left-color:var(--ag);color:#1d4a3c}
+.note.warn{background:#fbf3e6;border-left-color:var(--gold);color:#5a4a2c}
+ul.tight{margin:8px 0;padding-left:20px}ul.tight li{margin:5px 0;font-size:14px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+.controls button{background:#fff;border:1px solid var(--line);color:var(--dg);border-radius:8px;padding:5px 12px;font-family:'Barlow Semi Condensed';font-weight:600;font-size:12.5px;cursor:pointer}
+.hm{overflow-x:auto}
+table.heat{border-collapse:collapse;font-size:11.5px;min-width:760px}
+table.heat th{font-family:'Barlow Semi Condensed';color:var(--mut);font-weight:600;padding:5px 6px;text-align:center;background:var(--bg)}
+table.heat td.lab{text-align:left;white-space:nowrap;padding:3px 8px 3px 4px;max-width:230px;overflow:hidden;text-overflow:ellipsis}
+table.heat td.cell{width:62px;height:22px;text-align:center;font-size:10.5px;border:1px solid #fff}
+pre{background:#0e2e2d;color:#d9efe9;padding:14px;border-radius:8px;overflow:auto;font-size:11.5px;line-height:1.5}
+.foot{font-size:11.5px;color:var(--mut);margin-top:24px;border-top:1px solid var(--line);padding-top:12px}
+/* product table */
+.ptable-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:4px 0 12px}
+.ptable-controls input[type=text]{padding:7px 11px;border:1px solid var(--line);border-radius:8px;font-family:'Rubik';font-size:13px;min-width:220px}
+.ptable-controls select{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Rubik';font-size:13px}
+.pchk{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:5px;cursor:pointer}
+.pcount{font-size:12px;color:var(--mut);margin-left:auto;font-family:'Barlow Semi Condensed';font-weight:600}
+.ptable-wrap{max-height:560px;overflow-y:auto;border:1px solid var(--line);border-radius:10px}
+table.ptable{width:100%;border-collapse:collapse;font-size:13px}
+table.ptable th{position:sticky;top:0;background:#f1f6f5;color:var(--dg);font-family:'Barlow Semi Condensed';font-weight:700;font-size:12px;padding:9px 12px;text-align:right;cursor:pointer;white-space:nowrap;border-bottom:2px solid var(--line);user-select:none}
+table.ptable th .sub{font-weight:500;color:var(--mut);font-size:10px}
+table.ptable th.lft,table.ptable td.lft{text-align:left}
+table.ptable th:hover{background:#e6efee}
+table.ptable td{padding:8px 12px;text-align:right;border-bottom:1px solid #f0ebe6;white-space:nowrap}
+table.ptable tr:hover td{background:#fbf7f4}
+.ntag{font-size:10px;background:#dff5ec;color:#0a6b4d;border-radius:5px;padding:1px 6px;font-weight:700;font-family:'Barlow Semi Condensed';margin-left:5px}
+.cdot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:baseline}
+.spkwrap{display:inline-flex;align-items:flex-end;gap:2px;height:30px}
+.spk{display:inline-block;width:7px;border-radius:1px}
+.step{font-family:'Barlow Semi Condensed';font-weight:700;color:var(--dg);font-size:13px;letter-spacing:.5px;text-transform:uppercase;margin:22px 0 8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="byline" style="font-family:'Barlow Semi Condensed';font-weight:700;font-size:12.5px;letter-spacing:1px;color:#8fe3c8;text-transform:uppercase;margin-bottom:6px">Analysis by Keith Chong · Data Analytics Business Partner, TGTG NL</div>
+  <h1>Why has NL basket AOV gone up?</h1>
+  <div class="sub">AOV €41 → €46 since mid-May · in short: the assortment traded up to more expensive products — led by drinks and pantry, kicked off by the M&amp;M's launch · Basket Insights P2</div>
+</header>
+<div class="defbar">
+  <b>Scope:</b> NL basket orders · <b>AOV</b> = order total (<code>total_price_incl_tax</code>, incl. delivery) ÷ orders · <b>Inflection:</b> week of 18 May 2026 · Source <code>tgtg.product_mart.fct_order_item_parcel</code> · weekly (Mon); partial 22 Jun week excluded
+</div>
+<div class="tabs" id="tabs">
+  <div class="tab active" data-p="trend"><span class="n">1</span>AOV over time</div>
+  <div class="tab" data-p="contrib"><span class="n">2</span>Category contribution</div>
+  <div class="tab" data-p="mix"><span class="n">3</span>Category mix</div>
+  <div class="tab" data-p="withincat"><span class="n">4</span>Within-category mix</div>
+  <div class="tab" data-p="products"><span class="n">5</span>Brands &amp; products</div>
+  <div class="tab" data-p="summary"><span class="n">6</span>Summary &amp; actions</div>
+  <div class="tab" data-p="method">Methodology</div>
+</div>
+<main>
+
+<!-- ===== 1 · AOV OVER TIME ===== -->
+<section class="panel active" id="trend">
+  <div class="headline"><h2>1 · AOV rose from €40.77 to €45.44 — and it's value per order, not more orders</h2>
+    <p>Order volume is flat all period (~2,000–2,300/week). AOV started climbing the week of 18 May and has held. So whatever changed, it raised the <b>value of each order</b>, not the number of orders.</p></div>
+  <div class="grid g4">
+    <div class="kcard"><div class="lbl">AOV (from 18 May)</div><div class="big">€45.44</div><div class="delta up">▲ +€4.66 (+11.4%) vs €40.77</div></div>
+    <div class="kcard"><div class="lbl">Orders / week</div><div class="big">~2,150</div><div class="delta">flat — not the driver</div></div>
+    <div class="kcard"><div class="lbl">Price / item</div><div class="big">↑</div><div class="delta up">higher-priced items — the driver</div></div>
+    <div class="kcard"><div class="lbl">Items / order</div><div class="big">~5.7</div><div class="delta">≈ flat</div></div>
+  </div>
+  <div class="chartbox">
+    <h3>Weekly revenue &amp; AOV, with order volume</h3>
+    <p class="cap">AOV (red line) steps up from the week of 18 May. Revenue (tall teal bars) rises with it while orders (short bars, lower band) stay flat → the lift is value per order. <b>AOV = order total (<code>total_price_incl_tax</code>) ÷ orders.</b> Hover for values.</p>
+    <div class="cv"><canvas id="revAov"></canvas></div>
+  </div>
+  <div class="note"><b>The question this dashboard answers:</b> what raised the value of each order from the week of 18 May? The next tabs narrow it down — first to categories, then to specific brands and products.</div>
+</section>
+
+<!-- ===== 3 · CATEGORY MIX ===== -->
+<section class="panel" id="mix">
+  <div class="headline"><h2>3 · The category mix barely shifts — Snacks &amp; Drinks dominate; Pantry grows</h2>
+    <p>Each week's revenue split across <b>every category</b> (to 100%). Shoppers keep buying roughly the same mix — Snacks ~40%, Drinks ~28%. The one structural mover is <b>Pantry</b>, rising from ~5% to ~14%.</p></div>
+  <div class="chartbox">
+    <h3>Category share of weekly revenue (→ 100%)</h3>
+    <p class="cap">Stable bands = people aren't switching to higher-priced <i>categories</i>. So the AOV lift comes mostly from higher-priced <i>items within</i> categories (tab 2). NON-FOOD = Personal Care / Skincare &amp; Beauty / Household (parcel_type 10/11/12); OTHER = the parcel "Other" category; DELIVERY FEE shown as its own band so shares reconcile to AOV.</p>
+    <div class="cv tall"><canvas id="revMix"></canvas></div>
+    <p class="cap" style="margin-top:8px">* Seasonal not shown — only €286 (&lt;0.1%) in a single week.</p>
+  </div>
+  <div class="note"><b>Read:</b> Snacks and Drinks are the bulk of revenue throughout. Pantry is the clear riser; Non-food and Health quietly decline. Because the <i>mix</i> is broadly steady, the AOV rise must come from <b>higher-priced items within each category</b> — that's tab 2.</div>
+</section>
+
+<!-- ===== 2 · CATEGORY CONTRIBUTION ===== -->
+<section class="panel" id="contrib">
+  <div class="headline"><h2>2 · Drinks and Pantry contributed the most € to the AOV rise</h2>
+    <p>How many € each category adds to the <b>average order</b>, before vs from the week of 18 May. Every category (+ the delivery fee) is shown, and the deltas <b>sum exactly to the +€4.66 AOV rise</b> — so this is the complete, reconciled ranking of what drove AOV.</p></div>
+  <div class="chartbox">
+    <h3>€ added to / removed from the average order, by category</h3>
+    <p class="cap">Green = added value, red = dragged. Drinks (+€2.49) and Pantry (+€2.16) lead; Health (−€1.00) and Non-food (−€0.72) pulled down. Bars sum to +€4.66.</p>
+    <div class="cv"><canvas id="catContrib"></canvas></div>
+  </div>
+  <table>
+    <thead><tr><th>Category</th><th>€/order before</th><th>€/order from 18 May</th><th>Δ €/order</th></tr></thead>
+    <tbody>
+      <tr><td><b>Drinks</b></td><td>10.90</td><td>13.39</td><td style="color:var(--ag)"><b>+2.49</b></td></tr>
+      <tr><td><b>Pantry</b></td><td>2.93</td><td>5.09</td><td style="color:var(--ag)"><b>+2.16</b></td></tr>
+      <tr><td><b>Snacks</b> (incl. M&amp;M’s)</td><td>16.07</td><td>17.95</td><td style="color:var(--ag)"><b>+1.88</b></td></tr>
+      <tr><td>Kids</td><td>0.31</td><td>0.51</td><td style="color:var(--ag)">+0.20</td></tr>
+      <tr><td>Breakfast</td><td>2.65</td><td>2.80</td><td style="color:var(--ag)">+0.16</td></tr>
+      <tr><td>Seasonal</td><td>0.00</td><td>0.03</td><td style="color:var(--ag)">+0.03</td></tr>
+      <tr><td>Other</td><td>0.59</td><td>0.55</td><td style="color:var(--coral)">−0.04</td></tr>
+      <tr><td>Meals</td><td>0.66</td><td>0.58</td><td style="color:var(--coral)">−0.08</td></tr>
+      <tr><td>Pet food</td><td>0.67</td><td>0.57</td><td style="color:var(--coral)">−0.10</td></tr>
+      <tr><td>Delivery fee</td><td>1.33</td><td>1.03</td><td style="color:var(--coral)">−0.30</td></tr>
+      <tr><td>Non-food (PC / Skincare / Household)</td><td>2.70</td><td>1.98</td><td style="color:var(--coral)">−0.72</td></tr>
+      <tr><td>Health</td><td>1.96</td><td>0.96</td><td style="color:var(--coral)">−1.00</td></tr>
+      <tr><td><b>Net</b></td><td><b>40.77</b></td><td><b>45.44</b></td><td style="color:var(--ag)"><b>+4.66</b></td></tr>
+    </tbody>
+  </table>
+  <div class="note good"><b>The core finding:</b> <b>Drinks</b> added the most (+€2.49/order — the team listed more expensive drink products) and <b>Pantry</b> nearly doubled (+€2.16, broad across many products). <b>Snacks added +€1.88</b> — this is where the M&amp;M's launch sits; modest <i>as a category</i> because M&amp;M's partly replaced other snacks. <b>Health (−€1.00) and Non-food (−€0.72) generated less revenue per order than before</b>, and the <b>delivery fee fell −€0.30</b> as more orders cleared the €40 free-delivery line. Net: <b>+€4.66</b>.</div>
+</section>
+
+<!-- ===== 4 · WITHIN-CATEGORY MIX ===== -->
+<section class="panel" id="withincat">
+  <div class="headline"><h2>4 · Within each category — one hero, or a broad spread?</h2>
+    <p>Tab 2 showed Drinks &amp; Pantry added the most €. This shows <i>how</i>: it stacks each product's <b>weekly revenue</b> within a category, so you see the <b>category's growth</b> (total height) and <b>which products drive it</b> — a few <b>hero products</b> (concentrated) vs a <b>broad spread</b> of many. Switch categories to compare.</p></div>
+  <div class="controls">
+    <label for="wc-cat">Category</label>
+    <select id="wc-cat" onchange="renderWC()"></select>
+    <label for="wc-mode" style="margin-left:6px">Value</label>
+    <select id="wc-mode" onchange="renderWC()">
+      <option value="eur">Absolute € (shows growth)</option>
+      <option value="pct">% of category (100%)</option>
+    </select>
+    <label for="wc-scale" style="margin-left:6px">Y-axis</label>
+    <select id="wc-scale" onchange="renderWC()">
+      <option value="auto">Fit to category</option>
+      <option value="fixed">Fixed (compare across categories)</option>
+    </select>
+  </div>
+  <div class="statline" id="wc-statline" style="display:flex;gap:22px;flex-wrap:wrap;font-size:13px;margin:4px 0 0"></div>
+  <div class="chartbox">
+    <h3 id="wc-title">Product revenue per week (€)</h3>
+    <p class="cap">Each band = a top-10 product; grey "Other" = all remaining products. <b>Value</b>: absolute € (total height = category weekly revenue, shows growth) or % of category (mix only). <b>Y-axis</b>: fit to category, or fixed to compare sizes across categories. Big "Other" = broad/spread; tall single band = concentrated on a hero.</p>
+    <div class="cv tall"><canvas id="wcArea"></canvas></div>
+  </div>
+  <div class="note" id="wc-readout"></div>
+  <div class="note warn"><b>Read as directional:</b> products are keyed on brand + item name (no stable product ID — same offering often relisted under a new SKU). So a product appearing/disappearing can partly be relisting, not real assortment change. The <i>shape</i> (concentrated vs spread) is robust; individual entries/exits are not exact. See the data-quality callout on the Brands &amp; products tab.</div>
+</section>
+
+<!-- ===== 5 · BRANDS & PRODUCTS ===== -->
+<section class="panel" id="products">
+  <div class="headline"><h2>5 · The brands &amp; products behind it — M&amp;M's stands out, but it's one of several</h2>
+    <p>Start with brands: M&amp;M's is clearly the biggest single brand and the launch that kicked off the step-up. But drinks brands and others are building too — the lift is a <b>portfolio of new, pricier listings</b>, not one product.</p></div>
+
+  <div class="step">First — weekly revenue by brand (is M&amp;M's really standing out?)</div>
+  <div class="chartbox">
+    <h3>Top-10 brands — weekly revenue (stacked €)</h3>
+    <p class="cap">Top 10 brands by 8-week revenue, stacked. M&amp;M's (dark green) goes from €0 to the biggest band the week of 18 May, then eases — while Lipton, Teisseire and others build. Remaining brands grouped as "Other brands". Hover for values.</p>
+    <div class="cv tall"><canvas id="brandArea"></canvas></div>
+  </div>
+  <div class="note"><b>Yes — M&amp;M's stands out</b> (≈€43k over 8 weeks, ~2× the next brand) and triggered the step-up. <b>But it's already easing</b> (peak week of 25 May, declining since), and drink brands are picking up — which is why AOV holds. <b>M&amp;M's gross spend is ~€4/order, but it sits inside Snacks and displaced other snacks, so Snacks' net gain is +€1.88</b> — that's why Drinks &amp; Pantry out-contribute it at the category level.</div>
+
+  <div class="step">Then — the individual products driving it</div>
+  <div class="chartbox">
+    <h3>Top 40 products — weekly revenue (brand + item)</h3>
+    <p class="cap">Almost all the top gainers are <b>new listings from the week of 18 May</b> (Lipton Ice Tea Green, the M&amp;M's range, De Pindakaaswinkel, Bundaberg…), mostly priced €6–9. New pricier products replacing cheaper ones = the trade-up. Search, filter by category, and click a column to sort. Each row's mini-bars are its weekly revenue (27 Apr → 15 Jun); <span style="color:var(--ag)">▲</span>/<span style="color:var(--coral)">▼</span> = rising / cooling vs its own peak.</p>
+    <div class="ptable-controls">
+      <input id="psearch" type="text" placeholder="Search product or brand…" oninput="PT.render()">
+      <select id="pcat" onchange="PT.render()"><option value="">All categories</option></select>
+      <label class="pchk"><input id="pnew" type="checkbox" onchange="PT.render()"> New from 18 May only</label>
+      <span id="pcount" class="pcount"></span>
+    </div>
+    <div class="ptable-wrap">
+      <table class="ptable" id="ptable">
+        <thead><tr>
+          <th data-sort="prod" class="lft">Product</th>
+          <th data-sort="cat" class="lft">Category</th>
+          <th data-sort="total">Total €<br><span class="sub">8 wks</span></th>
+          <th data-sort="recent">Last 4wk vs first 4wk</th>
+          <th class="lft">Weekly revenue (27 Apr → 15 Jun)</th>
+        </tr></thead>
+        <tbody id="ptbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="note warn" style="border-left-width:6px">
+    <b>⚠️ Data quality — action needed from the commercial team (read before trusting product-level counts)</b>
+    <p style="margin:8px 0">Product-level analysis here is <b>directionally useful but not exact</b>, because the same product offering is not recorded consistently when it's relisted. In just this 8-week NL basket window:</p>
+    <ul class="tight">
+      <li><b>~25% more SKU IDs than actual products</b> — 628 distinct <code>item_id</code>s vs 468 distinct brand+name labels. The same offering gets a <b>new <code>item_id</code> when relisted</b>.</li>
+      <li><b>~29% of products were relisted under multiple SKUs</b> — 134 of 468 brand+name labels map to 2+ <code>item_id</code>s.</li>
+      <li><b>4.4% of sales rows have no brand filled in</b> — these collapse into vague buckets (e.g. "(no brand) | XL Besparingen").</li>
+      <li>Occasionally the name is tweaked on relist too (e.g. Chips Sticks "Chili Chip Sticks" → "Chili Chipssticks"; Lassie "Haverrijst Minuutje" → "Haverrijst") — but the dominant issue is simply a <b>new <code>item_id</code> for the same product</b>, so neither key is fully stable.</li>
+    </ul>
+    <p style="margin:8px 0"><b>What this blocks:</b> we can't reliably measure <b>assortment breadth vs depth</b>, or track a single product's <b>continuity / performance over time</b> (a product that "disappears" may just have been relisted under a new ID). Counts of "distinct products" are inflated by this churn.</p>
+    <p style="margin:8px 0 0"><b>The ask:</b> introduce a <b>stable product identifier</b> that persists across relistings (and enforce brand being filled in). With that, we can properly answer breadth-vs-depth, product lifecycle, and repeat-purchase questions — for NL and every new market.</p>
+  </div>
+</section>
+
+<!-- ===== 6 · SUMMARY & ACTIONS ===== -->
+<section class="panel" id="summary">
+  <div class="headline"><h2>6 · Summary — what drove the AOV rise, and what to keep doing</h2>
+    <p>Tying it together: one event, a clear set of causes, and the playbook for sustaining it (and replicating in new markets).</p></div>
+
+  <div class="chartbox">
+    <h3>The AOV bridge — €40.77 → €45.44 (+€4.66), by category</h3>
+    <p class="cap">Before the week of 18 May vs from 18 May onward. Each step is a category's Δ € per order; green adds, red drags. The steps reconcile exactly: €40.77 + all changes = €45.44.</p>
+    <div class="cv" style="height:440px"><canvas id="bridge"></canvas></div>
+  </div>
+
+  <div class="step">What drove it</div>
+  <p style="font-size:14px;margin:4px 0 10px">AOV rose from <b>€40.77 to €45.44 (+€4.66)</b>. Orders per week stayed flat, so the lift came entirely from each order being worth more. By category (€ per order, before → from 18 May):</p>
+  <table>
+    <thead><tr><th>Driver</th><th>Δ €/order</th><th>What it was</th></tr></thead>
+    <tbody>
+      <tr><td><b>1 · Pricier drinks</b></td><td style="color:var(--ag)"><b>+€2.49</b></td><td>The biggest driver — the team listed more expensive drink products (avg drink item €7.66 → €9.15).</td></tr>
+      <tr><td><b>2 · Pantry growth</b></td><td style="color:var(--ag)"><b>+€2.16</b></td><td>Pantry revenue per order roughly doubled, across a broad range of products.</td></tr>
+      <tr><td><b>3 · M&amp;M's launch</b> (in Snacks)</td><td style="color:var(--ag)"><b>+€1.88</b></td><td>0% → ~33% of orders; the most visible change &amp; the trigger. Net of M&amp;M's partly replacing other snacks.</td></tr>
+      <tr><td>Smaller positives (Kids, Breakfast, Seasonal)</td><td style="color:var(--ag)">+€0.39</td><td>Minor gains.</td></tr>
+      <tr><td>Health</td><td style="color:var(--coral)">−€1.00</td><td>Generated less revenue per order than before.</td></tr>
+      <tr><td>Non-food (PC / Skincare / Household)</td><td style="color:var(--coral)">−€0.72</td><td>Generated less revenue per order than before.</td></tr>
+      <tr><td>Delivery fee</td><td style="color:var(--coral)">−€0.30</td><td>More orders cleared the €40 free-delivery line, so less fee collected.</td></tr>
+      <tr><td>Minor negatives (Pet food, Meals, Other)</td><td style="color:var(--coral)">−€0.22</td><td>Small declines.</td></tr>
+      <tr><td><b>Net</b></td><td style="color:var(--ag)"><b>+€4.66</b></td><td><b>The AOV rise.</b></td></tr>
+    </tbody>
+  </table>
+
+  <div class="note good" style="font-size:14.5px"><b>The one-line story:</b> from the <b>week of 18 May the assortment was refreshed with new, more expensive products</b>. The M&amp;M's launch was the visible trigger, but the biggest contributors were <b>pricier drinks and a near-doubling of Pantry</b>. Health and Non-food generated less revenue per order than before. Shoppers buy the same number of items — they're just <b>worth more</b>.</div>
+
+  <div class="step">What to keep doing — NL &amp; new-market launches</div>
+  <div class="note good">
+    <ul class="tight">
+      <li><b>Curate €6–12 "anchor" products</b> — high-ticket items like M&amp;M's that land in a large share of baskets lift AOV more than adding items per order.</li>
+      <li><b>Find an anchor for each category</b> — M&amp;M's became the Snacks anchor; deliberately source the equivalent high-ticket hero in Drinks, Pantry and others.</li>
+      <li><b>Pantry is working as a category — keep investing in it.</b> Pantry's revenue per order roughly doubled, with strong, broad-based performance across many products. Keep building it out.</li>
+      <li><b>Keep refreshing the range</b> — most of the post-launch revenue (~66%, though our data can't fully separate brand-new items from relisted ones) comes from products that weren't selling beforehand. Continue introducing fresh listings.</li>
+      <li><b>Understand the Health &amp; Non-food decline</b> — both contributed less revenue per order than before. Worth investigating why and recovering it.</li>
+      <li><b>Monitor weekly</b> — track each product's revenue vs all products and within its category, to catch winners cooling and confirm new ones replace them. (Tab 4 is the prototype; a standing monitoring dashboard can be built if useful.)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== METHODOLOGY ===== -->
+<section class="panel" id="method">
+  <div class="headline"><h2>Methodology</h2><p>Reproducible from one fact table, queried in Count (Redshift Serverless BPs).</p></div>
+  <div class="chartbox"><h3>Source, scope &amp; windows</h3>
+    <ul class="tight" style="font-size:13.5px">
+      <li><b>Table:</b> <code>tgtg.product_mart.fct_order_item_parcel</code> — one row per order × distinct item.</li>
+      <li><b>Connection:</b> Count → Redshift Serverless BPs (<code>0sjxHt2lLsN</code>), project Global Analytics.</li>
+      <li><b>Scope:</b> <code>country_iso_code='NL' AND is_basket_order=TRUE</code>; date = <code>paid_date_local</code>; weekly buckets start Monday; partial week of 22 Jun excluded.</li>
+      <li><b>Inflection:</b> week of <b>18 May 2026</b> (M&amp;M's launched 19 May; AOV stepped up the same week). "Before/after" splits use 18 May.</li>
+    </ul></div>
+  <div class="chartbox"><h3>Key definitions</h3>
+    <ul class="tight" style="font-size:13.5px">
+      <li><b>AOV:</b> <code>total_price_incl_tax</code> is the order total, repeated on every item row → one value per <code>order_id</code> (<code>MAX … GROUP BY order_id</code>), then averaged. Never <code>SUM</code>.</li>
+      <li><b>Category € contribution:</b> avg of (category line value per order) across all orders, before vs after. Deltas sum to the product-value rise — the clean alternative to "share %".</li>
+      <li><b>Drinks price:</b> overall average <code>item_price_incl_tax</code> of drink items (not same-SKU — the team relisted with different SKUs, so the right measure is the overall drink price level).</li>
+      <li><b>Gross vs net:</b> M&amp;M's "~€4/order" is its gross line spend; net is smaller because it displaced other snacks (Snacks net +€1.88). Category €/order figures are the net view.</li>
+      <li><b>Product/brand identity:</b> <code>brand_name (+ item_name)</code>, not <code>item_id</code> (item_id churns on relist).</li>
+      <li><b>NON-FOOD:</b> <code>parcel_type</code> 10 = Personal Care, 11 = Skincare &amp; Beauty, 12 = Household (raw <code>parcel_type_name</code> shows "UNKNOWN").</li>
+    </ul></div>
+  <div class="chartbox"><h3>⚠️ Product-identity data quality (important limitation)</h3>
+    <p style="font-size:13.5px;margin:6px 0">The same product offering is <b>not recorded consistently across relistings</b>, which limits any product-level analysis. Measured over the 8-week NL basket window:</p>
+    <ul class="tight" style="font-size:13.5px">
+      <li>628 distinct <code>item_id</code>s vs only 468 distinct <code>brand+item_name</code> labels → <b>~25% of SKU IDs are duplicate identities</b> of an already-listed product.</li>
+      <li><b>134 of 468 labels (~29%) map to multiple <code>item_id</code>s</b> — same product, relisted under new SKUs.</li>
+      <li><b>4.4% of rows have a blank brand</b> (collapse into vague "(no brand)" buckets).</li>
+      <li>Occasionally the name is tweaked too (e.g. "Chili Chip Sticks" → "Chili Chipssticks") — but the dominant issue is a new <code>item_id</code> for the same product, so neither key is fully stable.</li>
+    </ul>
+    <p style="font-size:13.5px;margin:6px 0"><b>Consequence:</b> "distinct product" counts are inflated, so <b>breadth-vs-depth and single-product continuity cannot be measured reliably</b> (this is why the dashboard does not include a breadth/depth view — only a caveated text observation that growth <i>looks</i> breadth-led). <b>Recommendation:</b> introduce a persistent product ID across relistings + enforce brand population, so future analysis (breadth/depth, product lifecycle, repeat purchase) is trustworthy.</p>
+  </div>
+  <div class="note warn"><b>Other caveats:</b> per-category/product € figures are gross of cross-category substitution; post window is a partial month; revenue is gross (incl VAT, no margin/cost); product "newness" is name-based (and subject to the identity issue above). Availability (in-stock breadth) rose ~122→165 items alongside AOV but coincident, not causal. Full SQL: project repo <code>sql/q1…q11</code>.</div>
+</section>
+
+<div class="foot">Source <code>tgtg.product_mart.fct_order_item_parcel</code> via Count (Redshift Serverless BPs). All € incl. VAT. Prepared for Basket Insights P2. Earlier separate dashboards are in <code>archive/</code>.</div>
+</main>
+
+<script>
+const DG='#00615F',AG='#03A97B',CORAL='#ff7973',GOLD='#e0a44b',BLUE='#3d7ea6',PURPLE='#9b6bbf',MUT='#5f7170';
+Chart.defaults.font.family="'Rubik',sans-serif";Chart.defaults.color=MUT;Chart.defaults.font.size=11;
+const PAL=['#00615F','#03A97B','#ff7973','#e0a44b','#3d7ea6','#9b6bbf','#d96459','#6aa84f','#c27ba0','#45818e','#a64d79','#674ea7','#990000','#bf9000','#0b5394','#38761d','#85200c','#741b47','#1c4587','#b45f06','#5b5b5b','#2e7d32','#00897b','#5e35b1','#c62828','#ef6c00','#283593','#ad1457','#4527a0','#00695c','#827717','#4e342e','#01579b','#33691e','#880e4f','#3e2723','#006064','#e65100','#1a237e','#b71c1c'];
+const WK=['30 Mar','6 Apr','13 Apr','20 Apr','27 Apr','4 May','11 May','18 May','25 May','1 Jun','8 Jun','15 Jun'];
+const ORDERS=[1945,2153,1668,2326,1998,2200,2005,2269,2168,2102,2243,1925];
+const AOV=[40.07,39.91,40.91,41.32,39.62,41.46,41.66,42.35,44.22,45.76,47.61,47.25];
+const REV=AOV.map((a,i)=>Math.round(a*ORDERS[i]));
+const PWK=['27 Apr','4 May','11 May','18 May','25 May','1 Jun','8 Jun','15 Jun'];
+const PRODUCTS=[
+ {p:"Lipton | Ice Tea Green 500ml",c:"DRINKS",mm:false,d:[0,0,0,1978,2758,2737,1956,2077]},
+ {p:"M&M's | Chocolade 550g",c:"SNACKS",mm:true,d:[0,0,0,0,4945,3965,1187,27]},
+ {p:"M&M's | Pinda Chocolade Maxi",c:"SNACKS",mm:true,d:[0,0,0,1798,130,0,4076,3862]},
+ {p:"(no brand) | XL Besparingen",c:"OTHER",mm:false,d:[993,1379,709,1870,1463,1115,619,879]},
+ {p:"De Pindakaaswinkel | Pindakaas 420ml",c:"BREAKFAST",mm:false,d:[0,0,0,0,0,2799,4023,2124]},
+ {p:"M&M's | Crispy Maxi",c:"SNACKS",mm:true,d:[0,0,0,0,2849,3660,0,2083]},
+ {p:"Milka | Mix Chocolade",c:"SNACKS",mm:false,d:[1808,1469,1908,1730,99,296,0,0]},
+ {p:"Pukka | Thee Selection Box",c:"DRINKS",mm:false,d:[0,0,1034,2009,615,1094,1694,705]},
+ {p:"Côte d'Or | Melk Hazelnoot Caramel XL",c:"SNACKS",mm:false,d:[2476,1441,0,0,1091,1889,252,0]},
+ {p:"Trek | High Protein Repen",c:"SNACKS",mm:false,d:[1253,1405,532,440,819,1179,919,500]},
+ {p:"Lipton | Ice Tea Sparkling 1L",c:"DRINKS",mm:false,d:[1349,1313,764,0,0,0,1183,1452]},
+ {p:"Teisseire | Zero Vlierbloesem 600ml",c:"DRINKS",mm:false,d:[0,0,593,1692,1561,1616,560,0]},
+ {p:"Bundaberg | Blood Orange",c:"DRINKS",mm:false,d:[0,0,0,0,1616,1468,1138,1402]},
+ {p:"Côte d'Or | Puur Hazelnoot",c:"SNACKS",mm:false,d:[0,839,1805,1511,1245,0,0,0]},
+ {p:"M&M's | Chocolade Minis",c:"SNACKS",mm:true,d:[0,0,0,296,2189,0,2461,360]},
+ {p:"(no brand) | Lay's en Doritos Chips",c:"SNACKS",mm:false,d:[0,5297,0,0,0,0,0,0]},
+ {p:"Lay's | Max Chipspakket",c:"SNACKS",mm:false,d:[0,0,1672,1915,0,1110,3000,1154]},
+ {p:"Oreo | Mix Koekjes",c:"SNACKS",mm:false,d:[0,0,929,2268,0,0,967,735]},
+ {p:"Alpro | Barista Amandel",c:"DRINKS",mm:false,d:[475,979,685,671,601,447,461,384]},
+ {p:"Klene | Mix Zoete & Engelse Drop",c:"SNACKS",mm:false,d:[0,0,0,0,2373,1558,687,0]},
+ {p:"Quaker | Cruesli Mix",c:"BREAKFAST",mm:false,d:[674,1846,1369,725,0,0,0,0]},
+ {p:"Unox | Vegetarische Tomaten Soep",c:"MEALS",mm:false,d:[804,483,747,632,460,448,620,299]},
+ {p:"Carlito's | Iced Koffie",c:"DRINKS",mm:false,d:[1343,411,1170,928,591,0,0,0]},
+ {p:"M&M's | Pinda 363g",c:"SNACKS",mm:true,d:[0,0,0,2810,1608,0,0,0]},
+ {p:"John West | Fish Twist Mix",c:"PANTRY",mm:false,d:[737,1070,890,676,409,464,25,0]},
+ {p:"Fentimans | Ginger Beer 750ml",c:"DRINKS",mm:false,d:[0,2069,2069,75,0,0,0,0]},
+ {p:"Simon Lévelt | Sparkle Koffiecups",c:"DRINKS",mm:false,d:[0,0,0,1517,1561,1088,33,0]},
+ {p:"Lemonaid | Limoen 330ml",c:"DRINKS",mm:false,d:[0,0,462,824,1242,539,506,593]},
+ {p:"Hero | Cassis No Bubbles 1,5L",c:"DRINKS",mm:false,d:[0,324,418,567,796,571,764,656]},
+ {p:"BitesWeLove | Bio Linzenchips",c:"SNACKS",mm:false,d:[0,934,1164,1343,608,0,0,0]},
+ {p:"Peijnenburg | Ontbijtkoek",c:"BREAKFAST",mm:false,d:[0,0,0,0,1469,1049,939,480]},
+ {p:"Milka | Choco Brookie",c:"SNACKS",mm:false,d:[0,0,0,0,1627,1066,626,615]},
+ {p:"Magnifique Delistro | Hearts",c:"SNACKS",mm:false,d:[63,809,809,1099,548,566,0,0]},
+ {p:"Skittles | Crazy Sours",c:"SNACKS",mm:false,d:[965,391,0,0,972,748,419,360]},
+ {p:"BioToday | Mini Bars Kokos",c:"SNACKS",mm:false,d:[799,871,527,663,771,216,0,0]},
+ {p:"Snickers | Protein Bar",c:"SNACKS",mm:false,d:[0,0,0,1299,430,629,869,559]},
+ {p:"John Altman | Mixed Nuts Sea Salt",c:"SNACKS",mm:false,d:[759,1189,1439,390,0,0,1517,0]},
+ {p:"Stimorol | Kauwgom Mint",c:"SNACKS",mm:false,d:[0,0,0,529,1199,859,789,380]},
+ {p:"Lemonaid | Passievrucht 330ml",c:"DRINKS",mm:false,d:[0,0,0,0,1066,1000,824,758]},
+ {p:"Royal Club | Ginger Beer 0% 250ml",c:"DRINKS",mm:false,d:[0,0,0,0,0,0,2002,1643]}
+];
+// "new since 19 May" = no revenue in the first two weeks (27 Apr, 4 May)
+PRODUCTS.forEach(p=>{p.total=p.d.reduce((a,b)=>a+b,0); p.isNew=(p.d[0]+p.d[1]===0);
+  p.first4=p.d.slice(0,4).reduce((a,b)=>a+b,0); p.last4=p.d.slice(4).reduce((a,b)=>a+b,0);
+  p.recent=p.last4-p.first4;});
+const BRANDS=[
+ {b:"M&M's",d:[0,0,0,8608,11720,7946,8059,6708]},{b:"(no brand)",d:[4944,9784,3656,6568,2892,1494,1202,1291]},
+ {b:"Lipton",d:[3776,3410,1703,2520,4307,3452,3682,5654]},{b:"Côte d'Or",d:[3261,3939,5536,2667,3274,3151,2373,1739]},
+ {b:"Alpro",d:[1915,3796,3199,2810,2002,2387,2390,2858]},{b:"Teisseire",d:[0,0,593,4299,3634,4847,2791,3583]},
+ {b:"Milka",d:[1808,1469,1908,2666,2998,3495,2242,1467]},{b:"Verkade",d:[2954,1509,2393,413,968,1547,1258,1113]},
+ {b:"HAK",d:[230,294,269,0,0,0,5298,5324]},{b:"HI-FIVE",d:[2528,2134,677,1171,1538,719,577,1678]},
+ {b:"Quaker",d:[716,2541,1937,1108,1806,1350,1031,463]},{b:"Unox",d:[2533,1242,1111,1199,1207,857,1406,870]},
+ {b:"Simon Lévelt",d:[617,3656,0,1517,1561,1088,923,857]},{b:"Gutsy Captain",d:[0,0,818,1357,1735,3219,1497,1496]},
+ {b:"Your Food Friends",d:[0,0,0,1915,3845,2922,1007,49]},{b:"TUC",d:[3891,1039,64,1294,1122,1807,230,175]},
+ {b:"De Pindakaaswinkel",d:[0,0,0,0,0,2799,4023,2124]},{b:"Lay's",d:[0,0,1672,1915,0,1110,3000,1154]},
+ {b:"Knorr",d:[1492,957,1832,1134,467,510,1074,1072]},{b:"Lemonaid",d:[0,0,462,824,2308,1539,1330,1352]},
+ {b:"Reese's",d:[1015,951,767,693,887,1235,1133,975]},{b:"Klene",d:[0,0,0,0,3652,2038,1297,440]},
+ {b:"Fentimans",d:[119,2069,2578,650,647,528,495,300]},{b:"Magnifique Delistro",d:[63,1988,2348,1668,548,566,0,0]},
+ {b:"Pukka",d:[0,0,1034,2009,615,1094,1694,705]},{b:"BioToday",d:[1197,1095,527,1223,1671,851,308,210]},
+ {b:"Lassie",d:[35,1133,1840,1221,472,959,894,518]},{b:"Trek",d:[1253,1405,532,440,819,1179,919,500]},
+ {b:"Peijnenburg",d:[892,683,361,740,1469,1164,1019,480]},{b:"John Altman",d:[1329,1189,1439,843,431,58,1517,0]}
+];
+
+const _charts=[]; const built={};
+const tabs=[...document.querySelectorAll('.tab')];
+tabs.forEach(t=>t.onclick=()=>{
+  tabs.forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');document.getElementById(t.dataset.p).classList.add('active');
+  build(t.dataset.p);
+  requestAnimationFrame(()=>_charts.forEach(c=>{try{c.resize();}catch(e){}}));
+});
+
+const PT={ sortKey:'total', sortDir:-1, ready:false,
+  init(){
+    if(this.ready) return; this.ready=true;
+    const sel=document.getElementById('pcat');
+    [...new Set(PRODUCTS.map(p=>p.c))].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+    document.querySelectorAll('#ptable th[data-sort]').forEach(th=>th.onclick=()=>{
+      const k=th.dataset.sort;
+      if(this.sortKey===k){this.sortDir*=-1;}else{this.sortKey=k;this.sortDir=(k==='prod'||k==='cat')?1:-1;}
+      this.render();
+    });
+    this.render();
+  },
+  render(){
+    const q=(document.getElementById('psearch').value||'').toLowerCase();
+    const cat=document.getElementById('pcat').value;
+    const newOnly=document.getElementById('pnew').checked;
+    let rows=PRODUCTS.filter(p=>(!q||p.p.toLowerCase().includes(q))&&(!cat||p.c===cat)&&(!newOnly||p.isNew));
+    const k=this.sortKey,dir=this.sortDir;
+    rows=rows.slice().sort((a,b)=>{const av=a[k],bv=b[k];return (av<bv?-1:av>bv?1:0)*dir;});
+    const maxV=Math.max(...PRODUCTS.flatMap(p=>p.d));
+    const catCol={SNACKS:DG,DRINKS:AG,PANTRY:GOLD,BREAKFAST:BLUE,MEALS:'#7a8b8a',OTHER:'#b9a99c'};
+    document.getElementById('pcount').textContent=rows.length+' of '+PRODUCTS.length+' products';
+    document.getElementById('ptbody').innerHTML=rows.map(p=>{
+      const bars=p.d.map((v,i)=>{const h=Math.max(2,Math.round(28*v/maxV));const col=p.d[i]?(catCol[p.c]||MUT):'#eee';
+        return `<span class="spk" title="${PWK[i]}: €${v.toLocaleString()}" style="height:${h}px;background:${col}"></span>`;}).join('');
+      const trend=p.recent>200?`<span style="color:var(--ag)">▲ +€${Math.round(p.recent).toLocaleString()}</span>`
+        :p.recent<-200?`<span style="color:var(--coral)">▼ −€${Math.abs(Math.round(p.recent)).toLocaleString()}</span>`
+        :`<span style="color:var(--mut)">≈ flat</span>`;
+      const nm=p.p.replace(' | ',' · ')+(p.isNew?' <span class="ntag">new</span>':'');
+      const dot=`<span class="cdot" style="background:${catCol[p.c]||MUT}"></span>`;
+      return `<tr><td class="lft">${nm}</td><td class="lft">${dot}${p.c}</td><td><b>€${p.total.toLocaleString()}</b></td><td>${trend}</td><td class="lft"><span class="spkwrap">${bars}</span></td></tr>`;
+    }).join('');
+  }
+};
+const BR={chart:null,show(m){if(!this.chart)return;this.chart.data.datasets.forEach((ds,i)=>{let on=true;if(m==='all')on=true;else if(m==='none')on=false;else if(m==='top8')on=i<8;this.chart.setDatasetVisibility(i,on);});this.chart.update();}};
+
+function build(pid){
+  if(built[pid])return; built[pid]=true;
+  if(pid==='trend') buildTrend();
+  if(pid==='mix') buildMix();
+  if(pid==='contrib') buildContrib();
+  if(pid==='withincat') buildWithinCat();
+  if(pid==='products') buildProducts();
+  if(pid==='summary') buildSummary();
+}
+function buildTrend(){
+  // orders on a hidden axis scaled so the bars only fill the lower band (max = ~3.2x peak orders)
+  const ordMax=Math.max(...ORDERS)*3.2;
+  _charts.push(new Chart(document.getElementById('revAov'),{
+    data:{labels:WK,datasets:[
+      {type:'bar',label:'Weekly revenue (€)',data:REV,backgroundColor:'rgba(0,97,95,.20)',borderColor:DG,borderWidth:1,yAxisID:'y',borderRadius:3,order:3},
+      {type:'bar',label:'Orders / week',data:ORDERS,backgroundColor:'rgba(224,164,75,.55)',borderColor:GOLD,borderWidth:1,yAxisID:'yo',borderRadius:3,order:2,barPercentage:.5},
+      {type:'line',label:'AOV (€)',data:AOV,borderColor:CORAL,backgroundColor:CORAL,tension:.3,pointRadius:3,borderWidth:2.5,yAxisID:'y1',order:1}]},
+    options:{plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.dataset.yAxisID==='y1'?'€'+c.raw.toFixed(2):(c.dataset.yAxisID==='yo'?c.raw.toLocaleString()+' orders':'€'+c.raw.toLocaleString()))}}},interaction:{mode:'index',intersect:false},
+      scales:{
+        y:{position:'left',title:{display:true,text:'revenue (€/wk)'},grid:{drawOnChartArea:false},beginAtZero:true},
+        yo:{position:'left',display:false,min:0,max:ordMax},
+        y1:{position:'right',title:{display:true,text:'AOV (€)'},min:38,max:50}}}}));
+}
+function buildMix(){
+  // Every category as its own band (% of weekly revenue incl. delivery). 12 weeks 30 Mar–15 Jun.
+  // Seasonal omitted (1 week, 0.3% — footnoted). Ordered largest→smallest for a clean stack.
+  const RM={
+    SNACKS:        [35.8,38,40,41.6,38,38.1,43.9,42.1,41,38,41.5,34.5],
+    DRINKS:        [28.3,31.5,28.9,25.7,25.3,27,22.6,29.8,29,30.2,24.7,34],
+    PANTRY:        [6.3,5.1,4.2,4.3,10.4,9,10.6,8.4,9.5,9.3,14.1,14.3],
+    BREAKFAST:     [9.8,4.7,6.1,7.1,4,6.4,7.7,5.6,4.6,7.4,7.7,5.8],
+    'NON-FOOD':    [7.8,9,7.4,6.4,5.7,4.5,4.5,4.8,5.3,5.1,3.8,3],
+    HEALTH:        [1.5,2.8,4.2,5.8,8.8,6.3,3.1,2,1.9,2.7,2.3,1.8],
+    'DELIVERY FEE':[3.4,3.5,3.2,3.2,3.7,3.2,2.9,2.8,2.6,2.1,1.9,2],
+    'PET FOOD':    [1.3,1.2,1.9,2.1,1.5,1.6,1.9,1,1.5,1.7,1.3,0.8],
+    MEALS:         [2.2,2.5,1.6,1.2,1.2,1.5,1.2,0.7,1.4,1.2,1.1,1.8],
+    KIDS:          [0.4,0.9,1.3,0.7,0.3,0.9,0.8,0.8,1.4,1.2,1,1.1],
+    OTHER:         [3.3,0.7,1.2,1.9,1.3,1.5,0.8,1.9,1.5,1.2,0.6,0.7]
+  };
+  const CC={SNACKS:DG,DRINKS:AG,PANTRY:GOLD,BREAKFAST:BLUE,'NON-FOOD':PURPLE,HEALTH:'#d96459','DELIVERY FEE':'#b9c4c3','PET FOOD':'#6aa84f',MEALS:'#c27ba0',KIDS:'#45818e',OTHER:'#a89c8e'};
+  _charts.push(new Chart(document.getElementById('revMix'),{type:'bar',
+    data:{labels:WK,datasets:Object.keys(RM).map(k=>({label:k,data:RM[k],backgroundColor:CC[k],borderWidth:0}))},
+    options:{plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+'%'}}},responsive:true,maintainAspectRatio:false,
+      scales:{x:{stacked:true},y:{stacked:true,min:0,max:100,ticks:{callback:v=>v+'%'},title:{display:true,text:'% of weekly revenue'}}}}}));
+}
+function buildContrib(){
+  // Full reconciled bridge, pre (before 18 May) vs post (18 May+). Deltas sum to +€4.66 (the AOV change).
+  const d=[['Drinks',2.49],['Pantry',2.16],['Snacks (incl. M&M’s)',1.88],['Kids',0.20],['Breakfast',0.16],['Seasonal',0.03],
+           ['Other',-0.04],['Meals',-0.08],['Pet food',-0.10],['Delivery fee',-0.30],['Non-food (PC/Skin/HH)',-0.72],['Health',-1.00]];
+  _charts.push(new Chart(document.getElementById('catContrib'),{type:'bar',
+    data:{labels:d.map(x=>x[0]),datasets:[{data:d.map(x=>x[1]),backgroundColor:d.map(x=>x[1]>=0?AG:CORAL),borderRadius:4}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw>=0?'+':'')+'€'+c.raw.toFixed(2)+' / order'}}},
+      scales:{x:{title:{display:true,text:'Δ € per order, before → from week of 18 May (sums to +€4.66 = the AOV rise)'}}}}}));
+}
+function buildProducts(){
+  // Top-10 brands by 8-wk revenue as stacked area; the rest summed into "Other brands".
+  const top10=BRANDS.slice(0,10);
+  const otherData=PWK.map((_,wi)=>BRANDS.slice(10).reduce((s,b)=>s+(b.d[wi]||0),0));
+  const bds=top10.map((b,i)=>({label:b.b,data:b.d,backgroundColor:PAL[i%PAL.length],borderWidth:0,fill:true,tension:.25,pointRadius:0,stack:'s'}));
+  bds.push({label:'Other brands',data:otherData,backgroundColor:'#d8cfc8',borderWidth:0,fill:true,tension:.25,pointRadius:0,stack:'s'});
+  _charts.push(new Chart(document.getElementById('brandArea'),{type:'line',
+    data:{labels:PWK,datasets:bds},
+    options:{plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:9}}},tooltip:{callbacks:{label:c=>c.dataset.label+': €'+(c.raw||0).toLocaleString()}}},interaction:{mode:'index',intersect:false},
+      scales:{y:{stacked:true,title:{display:true,text:'revenue (€/wk)'},beginAtZero:true}}}}));
+  PT.init();
+}
+function buildSummary(){
+  // Category waterfall: Before AOV €40.77 → +/- each category → After €45.44 (+€4.66). 18 May boundary.
+  const steps=[{l:'AOV before',t:'abs',v:40.77},
+    {l:'Drinks',t:'pos',v:2.49},{l:'Pantry',t:'pos',v:2.16},{l:'Snacks (M&M’s)',t:'pos',v:1.88},
+    {l:'Kids/Breakfast/Seasonal',t:'pos',v:0.39},
+    {l:'Pet food/Meals/Other',t:'neg',v:-0.22},
+    {l:'Delivery fee',t:'neg',v:-0.30},{l:'Non-food',t:'neg',v:-0.72},{l:'Health',t:'neg',v:-1.00},
+    {l:'AOV from 18 May',t:'abs',v:45.44}];
+  let run=0;const floats=[],cols=[];
+  steps.forEach(s=>{if(s.t==='abs'){floats.push([0,s.v]);cols.push(DG);run=s.v;}else{const st=run;run+=s.v;floats.push([Math.min(st,run),Math.max(st,run)]);cols.push(s.v>=0?AG:CORAL);}});
+  _charts.push(new Chart(document.getElementById('bridge'),{type:'bar',
+    data:{labels:steps.map(s=>s.l),datasets:[{data:floats,backgroundColor:cols,borderRadius:3,barPercentage:.6,categoryPercentage:.8}]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{bottom:8}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const s=steps[c.dataIndex];return s.t==='abs'?'€'+s.v.toFixed(2):(s.v>=0?'+':'')+'€'+s.v.toFixed(2);}}}},
+      scales:{y:{beginAtZero:false,min:40,max:50,title:{display:true,text:'AOV (€ per order)'}},x:{ticks:{maxRotation:55,minRotation:45,autoSkip:false,font:{size:9}}}}}}));
+}
+// ---- Within-category data (ported from aov-within-category-products.html) ----
+const WC_WK=["27 Apr","4 May","11 May","18 May","25 May","1 Jun","8 Jun","15 Jun"];
+const WC_WKD=["2026-04-27","2026-05-04","2026-05-11","2026-05-18","2026-05-25","2026-06-01","2026-06-08","2026-06-15"];
+const WC_ROWS=[
+["BREAKFAST","2026-04-27","Other",35],["BREAKFAST","2026-04-27","De Ruijter | Mini Hagel en Vlokken",25.4],["BREAKFAST","2026-04-27","Quaker | Cruesli Mix",21.5],["BREAKFAST","2026-04-27","Kit Kat | Melkchocolade Cereal",16.3],["BREAKFAST","2026-04-27","Jordans | Pop & Crisp Chocolate",1.9],
+["BREAKFAST","2026-05-04","Quaker | Cruesli Mix",31.6],["BREAKFAST","2026-05-04","De Ruijter | Mini Hagel en Vlokken",25.3],["BREAKFAST","2026-05-04","Other",23.9],["BREAKFAST","2026-05-04","Quaker | Havermout Express Naturel",11.9],["BREAKFAST","2026-05-04","Oho | Breakfast Cereals",7.3],
+["BREAKFAST","2026-05-11","Other",43.1],["BREAKFAST","2026-05-11","Quaker | Cruesli Mix",21.3],["BREAKFAST","2026-05-11","Zonnatura | Crunchy Muesli",12.2],["BREAKFAST","2026-05-11","Quaker | Havermout Express Naturel",8.8],["BREAKFAST","2026-05-11","Oho | Breakfast Cereals",8.1],["BREAKFAST","2026-05-11","Kit Kat | Melkchocolade Cereal",4.6],["BREAKFAST","2026-05-11","Jordans | Pop & Crisp Chocolate",1.8],
+["BREAKFAST","2026-05-18","Other",22],["BREAKFAST","2026-05-18","Zonnatura | Crunchy Muesli",16.1],["BREAKFAST","2026-05-18","Kit Kat | Melkchocolade Cereal",14.9],["BREAKFAST","2026-05-18","Quaker | Cruesli Mix",13.5],["BREAKFAST","2026-05-18","De Ruijter | Mini Hagel en Vlokken",12.3],["BREAKFAST","2026-05-18","Oho | Breakfast Cereals",8.7],["BREAKFAST","2026-05-18","Quaker | Havermout Express Naturel",7.1],["BREAKFAST","2026-05-18","Jordans | Pop & Crisp Chocolate",5.3],
+["BREAKFAST","2026-05-25","Other",62.1],["BREAKFAST","2026-05-25","De Ruijter | Mini Hagel en Vlokken",13.5],["BREAKFAST","2026-05-25","Jordans | Pop & Crisp Chocolate",10.2],["BREAKFAST","2026-05-25","Zonnatura | Crunchy Muesli",7.8],["BREAKFAST","2026-05-25","Kit Kat | Melkchocolade Cereal",4.3],["BREAKFAST","2026-05-25","Quaker | Havermout Express Naturel",2.2],
+["BREAKFAST","2026-06-01","De Pindakaaswinkel | Pindakaas 420ml",39.5],["BREAKFAST","2026-06-01","Other",18.6],["BREAKFAST","2026-06-01","Holie's | Crunchy Muesli Coconut",17.4],["BREAKFAST","2026-06-01","Quaker | Granola Naturel Zero Sugar",8.3],["BREAKFAST","2026-06-01","Jordans | Pop & Crisp Chocolate",7.2],["BREAKFAST","2026-06-01","Quaker | Havermout Express Naturel",6.4],["BREAKFAST","2026-06-01","Oho | Breakfast Cereals",2.5],
+["BREAKFAST","2026-06-08","De Pindakaaswinkel | Pindakaas 420ml",48.9],["BREAKFAST","2026-06-08","Other",18],["BREAKFAST","2026-06-08","Holie's | Crunchy Muesli Coconut",13.2],["BREAKFAST","2026-06-08","Quaker | Granola Naturel Zero Sugar",12.4],["BREAKFAST","2026-06-08","Oho | Breakfast Cereals",4.8],["BREAKFAST","2026-06-08","Jordans | Pop & Crisp Chocolate",2.5],["BREAKFAST","2026-06-08","Quaker | Havermout Express Naturel",0.1],
+["BREAKFAST","2026-06-15","Other",44.4],["BREAKFAST","2026-06-15","De Pindakaaswinkel | Pindakaas 420ml",40.6],["BREAKFAST","2026-06-15","Quaker | Granola Naturel Zero Sugar",8.9],["BREAKFAST","2026-06-15","Jordans | Pop & Crisp Chocolate",3.1],["BREAKFAST","2026-06-15","Oho | Breakfast Cereals",3.1],
+["DRINKS","2026-04-27","Other",84.2],["DRINKS","2026-04-27","Carlito's | Iced Koffie",6.7],["DRINKS","2026-04-27","Lipton | Ice Tea Sparkling 1L",6.7],["DRINKS","2026-04-27","Alpro | Barista Amandel",2.4],
+["DRINKS","2026-05-04","Other",80.6],["DRINKS","2026-05-04","Fentimans | Ginger Beer 750ml",8.4],["DRINKS","2026-05-04","Lipton | Ice Tea Sparkling 1L",5.3],["DRINKS","2026-05-04","Alpro | Barista Amandel",4],["DRINKS","2026-05-04","Carlito's | Iced Koffie",1.7],
+["DRINKS","2026-05-11","Other",64],["DRINKS","2026-05-11","Fentimans | Ginger Beer 750ml",11],["DRINKS","2026-05-11","Carlito's | Iced Koffie",6.2],["DRINKS","2026-05-11","Pukka | Thee Selection Box",5.5],["DRINKS","2026-05-11","Lipton | Ice Tea Sparkling 1L",4.1],["DRINKS","2026-05-11","Alpro | Barista Amandel",3.6],["DRINKS","2026-05-11","Teisseire | Zero Vlierbloesem 600ml",3.1],["DRINKS","2026-05-11","Lemonaid | Limoen 330ml",2.4],
+["DRINKS","2026-05-18","Other",66.2],["DRINKS","2026-05-18","Pukka | Thee Selection Box",7],["DRINKS","2026-05-18","Lipton | Ice Tea Green 500ml",6.9],["DRINKS","2026-05-18","Teisseire | Zero Vlierbloesem 600ml",5.9],["DRINKS","2026-05-18","Simon Lévelt | Sparkle Koffiecups",5.3],["DRINKS","2026-05-18","Carlito's | Iced Koffie",3.2],["DRINKS","2026-05-18","Lemonaid | Limoen 330ml",2.9],["DRINKS","2026-05-18","Alpro | Barista Amandel",2.3],["DRINKS","2026-05-18","Fentimans | Ginger Beer 750ml",0.3],
+["DRINKS","2026-05-25","Other",62.1],["DRINKS","2026-05-25","Lipton | Ice Tea Green 500ml",9.9],["DRINKS","2026-05-25","Bundaberg | Blood Orange",5.8],["DRINKS","2026-05-25","Teisseire | Zero Vlierbloesem 600ml",5.6],["DRINKS","2026-05-25","Simon Lévelt | Sparkle Koffiecups",5.6],["DRINKS","2026-05-25","Lemonaid | Limoen 330ml",4.5],["DRINKS","2026-05-25","Pukka | Thee Selection Box",2.2],["DRINKS","2026-05-25","Alpro | Barista Amandel",2.2],["DRINKS","2026-05-25","Carlito's | Iced Koffie",2.1],
+["DRINKS","2026-06-01","Other",69.1],["DRINKS","2026-06-01","Lipton | Ice Tea Green 500ml",9.4],["DRINKS","2026-06-01","Teisseire | Zero Vlierbloesem 600ml",5.6],["DRINKS","2026-06-01","Bundaberg | Blood Orange",5],["DRINKS","2026-06-01","Pukka | Thee Selection Box",3.8],["DRINKS","2026-06-01","Simon Lévelt | Sparkle Koffiecups",3.7],["DRINKS","2026-06-01","Lemonaid | Limoen 330ml",1.9],["DRINKS","2026-06-01","Alpro | Barista Amandel",1.5],
+["DRINKS","2026-06-08","Other",71.5],["DRINKS","2026-06-08","Lipton | Ice Tea Green 500ml",7.4],["DRINKS","2026-06-08","Pukka | Thee Selection Box",6.4],["DRINKS","2026-06-08","Lipton | Ice Tea Sparkling 1L",4.5],["DRINKS","2026-06-08","Bundaberg | Blood Orange",4.3],["DRINKS","2026-06-08","Teisseire | Zero Vlierbloesem 600ml",2.1],["DRINKS","2026-06-08","Lemonaid | Limoen 330ml",1.9],["DRINKS","2026-06-08","Alpro | Barista Amandel",1.7],["DRINKS","2026-06-08","Simon Lévelt | Sparkle Koffiecups",0.1],
+["DRINKS","2026-06-15","Other",78.6],["DRINKS","2026-06-15","Lipton | Ice Tea Green 500ml",6.7],["DRINKS","2026-06-15","Lipton | Ice Tea Sparkling 1L",4.7],["DRINKS","2026-06-15","Bundaberg | Blood Orange",4.5],["DRINKS","2026-06-15","Pukka | Thee Selection Box",2.3],["DRINKS","2026-06-15","Lemonaid | Limoen 330ml",1.9],["DRINKS","2026-06-15","Alpro | Barista Amandel",1.2],
+["PANTRY","2026-04-27","Other",65.5],["PANTRY","2026-04-27","Knorr | Groenten Wraps",13.1],["PANTRY","2026-04-27","Unox | Vegetarische Tomaten Soep",9.8],["PANTRY","2026-04-27","John West | Fish Twist Mix",8.9],["PANTRY","2026-04-27","Ponti | Groenten en Azijn",2.7],
+["PANTRY","2026-05-04","Other",58.8],["PANTRY","2026-05-04","John West | Fish Twist Mix",13.1],["PANTRY","2026-05-04","Lassie | Zilvervliesrijst Buitljes",6.7],["PANTRY","2026-05-04","Unox | Vegetarische Tomaten Soep",5.9],["PANTRY","2026-05-04","Lassie | Parelcouscous Builtjes",5.7],["PANTRY","2026-05-04","Knorr | Groenten Wraps",5.1],["PANTRY","2026-05-04","Ponti | Groenten en Azijn",4.7],
+["PANTRY","2026-05-11","Other",51.6],["PANTRY","2026-05-11","John West | Fish Twist Mix",10],["PANTRY","2026-05-11","Knorr | Groenten Wraps",9.5],["PANTRY","2026-05-11","Lassie | Zilvervliesrijst Buitljes",8.9],["PANTRY","2026-05-11","Unox | Vegetarische Tomaten Soep",8.4],["PANTRY","2026-05-11","Lassie | Parelcouscous Builtjes",7.9],["PANTRY","2026-05-11","Ponti | Groenten en Azijn",3.6],
+["PANTRY","2026-05-18","Other",58.1],["PANTRY","2026-05-18","John West | Fish Twist Mix",8.3],["PANTRY","2026-05-18","Lassie | Parelcouscous Builtjes",8.3],["PANTRY","2026-05-18","Unox | Vegetarische Tomaten Soep",7.8],["PANTRY","2026-05-18","Lassie | Zilvervliesrijst Buitljes",6.7],["PANTRY","2026-05-18","Ponti | Groenten en Azijn",6.3],["PANTRY","2026-05-18","Knorr | Groenten Wraps",4.4],
+["PANTRY","2026-05-25","Other",81.4],["PANTRY","2026-05-25","Lassie | Parelcouscous Builtjes",5.2],["PANTRY","2026-05-25","Unox | Vegetarische Tomaten Soep",5],["PANTRY","2026-05-25","John West | Fish Twist Mix",4.5],["PANTRY","2026-05-25","Ponti | Groenten en Azijn",3.9],
+["PANTRY","2026-06-01","Other",74.2],["PANTRY","2026-06-01","Lassie | Parelcouscous Builtjes",6.4],["PANTRY","2026-06-01","John West | Fish Twist Mix",5.2],["PANTRY","2026-06-01","Unox | Vegetarische Tomaten Soep",5],["PANTRY","2026-06-01","Lassie | Zilvervliesrijst Buitljes",4.3],["PANTRY","2026-06-01","Ragusa | Penne en Spaghetti",3.3],["PANTRY","2026-06-01","Ponti | Groenten en Azijn",1.6],
+["PANTRY","2026-06-08","Other",58.7],["PANTRY","2026-06-08","HAK | Mais",9.7],["PANTRY","2026-06-08","HAK | Bonenmix",7.7],["PANTRY","2026-06-08","HAK | Kikkererwten",7.7],["PANTRY","2026-06-08","Ragusa | Penne en Spaghetti",6.9],["PANTRY","2026-06-08","Unox | Vegetarische Tomaten Soep",4.1],["PANTRY","2026-06-08","Lassie | Zilvervliesrijst Buitljes",2.9],["PANTRY","2026-06-08","Lassie | Parelcouscous Builtjes",2],["PANTRY","2026-06-08","John West | Fish Twist Mix",0.2],
+["PANTRY","2026-06-15","Other",57.5],["PANTRY","2026-06-15","HAK | Mais",15],["PANTRY","2026-06-15","HAK | Kikkererwten",9.7],["PANTRY","2026-06-15","HAK | Bonenmix",5.9],["PANTRY","2026-06-15","Ragusa | Penne en Spaghetti",5.5],["PANTRY","2026-06-15","Unox | Vegetarische Tomaten Soep",2.3],["PANTRY","2026-06-15","Lassie | Zilvervliesrijst Buitljes",1.8],["PANTRY","2026-06-15","Lassie | Parelcouscous Builtjes",1.4],["PANTRY","2026-06-15","Ponti | Groenten en Azijn",1],
+["SNACKS","2026-04-27","Other",85.8],["SNACKS","2026-04-27","Côte d'Or | Melk Hazelnoot Caramel XL",8.2],["SNACKS","2026-04-27","Milka | Mix Chocolade",6],
+["SNACKS","2026-05-04","Other",74],["SNACKS","2026-05-04","(none) | Lay's en Doritos Chips",15.3],["SNACKS","2026-05-04","Milka | Mix Chocolade",4.2],["SNACKS","2026-05-04","Côte d'Or | Melk Hazelnoot Caramel XL",4.1],["SNACKS","2026-05-04","Côte d'Or | Puur Hazelnoot",2.4],
+["SNACKS","2026-05-11","Other",87.3],["SNACKS","2026-05-11","Milka | Mix Chocolade",5.2],["SNACKS","2026-05-11","Côte d'Or | Puur Hazelnoot",4.9],["SNACKS","2026-05-11","Oreo | Mix Koekjes",2.5],
+["SNACKS","2026-05-18","Other",81.2],["SNACKS","2026-05-18","Oreo | Mix Koekjes",5.6],["SNACKS","2026-05-18","M&M's | Pinda Chocolade Maxi",4.4],["SNACKS","2026-05-18","Milka | Mix Chocolade",4.3],["SNACKS","2026-05-18","Côte d'Or | Puur Hazelnoot",3.7],["SNACKS","2026-05-18","M&M's | Chocolade Minis",0.7],
+["SNACKS","2026-05-25","Other",68.1],["SNACKS","2026-05-25","M&M's | Chocolade 550g",12.6],["SNACKS","2026-05-25","M&M's | Crispy Maxi",7.3],["SNACKS","2026-05-25","M&M's | Chocolade Minis",5.6],["SNACKS","2026-05-25","Côte d'Or | Puur Hazelnoot",3.2],["SNACKS","2026-05-25","Côte d'Or | Melk Hazelnoot Caramel XL",2.8],["SNACKS","2026-05-25","Milka | Mix Chocolade",0.3],["SNACKS","2026-05-25","M&M's | Pinda Chocolade Maxi",0.3],
+["SNACKS","2026-06-01","Other",70.1],["SNACKS","2026-06-01","M&M's | Chocolade 550g",10.9],["SNACKS","2026-06-01","M&M's | Crispy Maxi",10],["SNACKS","2026-06-01","Côte d'Or | Melk Hazelnoot Caramel XL",5.2],["SNACKS","2026-06-01","Lay's | Max Chipspakket",3],["SNACKS","2026-06-01","Milka | Mix Chocolade",0.8],
+["SNACKS","2026-06-08","Other",73],["SNACKS","2026-06-08","M&M's | Pinda Chocolade Maxi",9.2],["SNACKS","2026-06-08","Lay's | Max Chipspakket",6.8],["SNACKS","2026-06-08","M&M's | Chocolade Minis",5.6],["SNACKS","2026-06-08","M&M's | Chocolade 550g",2.7],["SNACKS","2026-06-08","Oreo | Mix Koekjes",2.2],["SNACKS","2026-06-08","Côte d'Or | Melk Hazelnoot Caramel XL",0.6],
+["SNACKS","2026-06-15","Other",73.8],["SNACKS","2026-06-15","M&M's | Pinda Chocolade Maxi",12.3],["SNACKS","2026-06-15","M&M's | Crispy Maxi",6.6],["SNACKS","2026-06-15","Lay's | Max Chipspakket",3.7],["SNACKS","2026-06-15","Oreo | Mix Koekjes",2.3],["SNACKS","2026-06-15","M&M's | Chocolade Minis",1.1],["SNACKS","2026-06-15","M&M's | Chocolade 550g",0.1],
+["NON-FOOD","2026-04-27","Other",50.6],["NON-FOOD","2026-04-27","Finish | Vaatwastabletten Quantum",11],["NON-FOOD","2026-04-27","Robijn | Wasmiddel 3L",10.7],["NON-FOOD","2026-04-27","Dove | Showergel 600ml",10.3],["NON-FOOD","2026-04-27","Robijn | Wasmiddel 3L + Wasverzachter",6.8],["NON-FOOD","2026-04-27","Zwitsal | Wasgel Zeepvrij",4.2],["NON-FOOD","2026-04-27","Andrélon | Haarmasker Perfecte Krul",3.4],["NON-FOOD","2026-04-27","Andrélon | Men Shampoo Hair & Body",3],
+["NON-FOOD","2026-05-04","Other",50.2],["NON-FOOD","2026-05-04","Robijn | Wasmiddel 3L",10.2],["NON-FOOD","2026-05-04","Dove | Showergel 600ml",9.6],["NON-FOOD","2026-05-04","Finish | Vaatwastabletten Quantum",8.2],["NON-FOOD","2026-05-04","Zwitsal | Wasgel Zeepvrij",6.5],["NON-FOOD","2026-05-04","Robijn | Wasmiddel 3L + Wasverzachter",6],["NON-FOOD","2026-05-04","Andrélon | Haarmasker Perfecte Krul",3.7],["NON-FOOD","2026-05-04","Glorix | Toiletblok White Rose",3],["NON-FOOD","2026-05-04","Andrélon | Men Shampoo Hair & Body",2.6],
+["NON-FOOD","2026-05-11","Other",36.3],["NON-FOOD","2026-05-11","Zwitsal | Wasgel Zeepvrij",11.4],["NON-FOOD","2026-05-11","Finish | Vaatwastabletten Quantum",11],["NON-FOOD","2026-05-11","Robijn | Wasmiddel 3L",10.4],["NON-FOOD","2026-05-11","Dove | Showergel 600ml",8.6],["NON-FOOD","2026-05-11","Glorix | Toiletblok White Rose",7.2],["NON-FOOD","2026-05-11","Robijn | Wasmiddel 3L + Wasverzachter",6.6],["NON-FOOD","2026-05-11","Andrélon | Men Shampoo Hair & Body",5.3],["NON-FOOD","2026-05-11","Andrélon | Haarmasker Perfecte Krul",3.2],
+["NON-FOOD","2026-05-18","Other",30.1],["NON-FOOD","2026-05-18","Finish | Vaatwastabletten Quantum",11.8],["NON-FOOD","2026-05-18","Robijn | Wasmiddel 3L + Wasverzachter",9.5],["NON-FOOD","2026-05-18","Zwitsal | Wasgel Zeepvrij",9.3],["NON-FOOD","2026-05-18","Dove | Showergel 600ml",9.3],["NON-FOOD","2026-05-18","Glorix | Toiletblok White Rose",8.2],["NON-FOOD","2026-05-18","Robijn | Wasmiddel 3L",7.8],["NON-FOOD","2026-05-18","Andrélon | Men Shampoo Hair & Body",6.4],["NON-FOOD","2026-05-18","Andrélon | Haarmasker Perfecte Krul",4],["NON-FOOD","2026-05-18","Vaseline | Bar Soap 3pcs",3.6],
+["NON-FOOD","2026-05-25","Other",52.4],["NON-FOOD","2026-05-25","Glorix | Toiletblok White Rose",7.5],["NON-FOOD","2026-05-25","Dove | Showergel 600ml",7.3],["NON-FOOD","2026-05-25","Vaseline | Bar Soap 3pcs",7.2],["NON-FOOD","2026-05-25","Robijn | Wasmiddel 3L",5.9],["NON-FOOD","2026-05-25","Andrélon | Haarmasker Perfecte Krul",4.9],["NON-FOOD","2026-05-25","WC Eend | Toiletblok",4.7],["NON-FOOD","2026-05-25","Andrélon | Men Shampoo Hair & Body",4.3],["NON-FOOD","2026-05-25","Finish | Vaatwastabletten Quantum",3.1],["NON-FOOD","2026-05-25","Robijn | Wasmiddel 3L + Wasverzachter",2.3],
+["NON-FOOD","2026-06-01","Other",52.7],["NON-FOOD","2026-06-01","WC Eend | Toiletblok",11.6],["NON-FOOD","2026-06-01","Robijn | Wasmiddel 3L",11],["NON-FOOD","2026-06-01","Dove | Showergel 600ml",7.2],["NON-FOOD","2026-06-01","Vaseline | Bar Soap 3pcs",6.8],["NON-FOOD","2026-06-01","Finish | Vaatwastabletten Quantum",3.7],["NON-FOOD","2026-06-01","Glorix | Toiletblok White Rose",2.8],["NON-FOOD","2026-06-01","Andrélon | Haarmasker Perfecte Krul",2.3],["NON-FOOD","2026-06-01","Andrélon | Men Shampoo Hair & Body",2],
+["NON-FOOD","2026-06-08","Other",52],["NON-FOOD","2026-06-08","WC Eend | Toiletblok",11.4],["NON-FOOD","2026-06-08","Finish | Vaatwastabletten Quantum",11.4],["NON-FOOD","2026-06-08","Vaseline | Bar Soap 3pcs",7.2],["NON-FOOD","2026-06-08","Robijn | Wasmiddel 3L",5.9],["NON-FOOD","2026-06-08","Dove | Showergel 600ml",5.4],["NON-FOOD","2026-06-08","Andrélon | Haarmasker Perfecte Krul",3.9],["NON-FOOD","2026-06-08","Andrélon | Men Shampoo Hair & Body",2.9],
+["NON-FOOD","2026-06-15","Other",43.2],["NON-FOOD","2026-06-15","Finish | Vaatwastabletten Quantum",17.1],["NON-FOOD","2026-06-15","Vaseline | Bar Soap 3pcs",9.2],["NON-FOOD","2026-06-15","Robijn | Wasmiddel 3L",8.8],["NON-FOOD","2026-06-15","WC Eend | Toiletblok",8.1],["NON-FOOD","2026-06-15","Dove | Showergel 600ml",5.2],["NON-FOOD","2026-06-15","Andrélon | Men Shampoo Hair & Body",4.9],["NON-FOOD","2026-06-15","Andrélon | Haarmasker Perfecte Krul",3.5],
+["HEALTH","2026-04-27","Trek | High Protein Repen",18.1],["HEALTH","2026-04-27","Barebells | Proteinrepen XL",17.4],["HEALTH","2026-04-27","Yfood | Fruity Mango Drinkmaaltijd",16],["HEALTH","2026-04-27","Yfood | Strawberry Drinkmaaltijd",13],["HEALTH","2026-04-27","Clean Nutrition | Pre-Workout Apple",12.6],["HEALTH","2026-04-27","Yfood | Fruity Peach Drinkmaaltijd",11.2],["HEALTH","2026-04-27","Rawbite | Protein Peanut Caramel Reep",6.6],["HEALTH","2026-04-27","Barebells | Proteinrepen",2.6],["HEALTH","2026-04-27","Other",2.4],
+["HEALTH","2026-05-04","Trek | High Protein Repen",24.4],["HEALTH","2026-05-04","Barebells | Proteinrepen XL",21],["HEALTH","2026-05-04","Barebells | Proteinrepen",15.3],["HEALTH","2026-05-04","Yfood | Fruity Peach Drinkmaaltijd",13.9],["HEALTH","2026-05-04","Yfood | Strawberry Drinkmaaltijd",8.7],["HEALTH","2026-05-04","Clean Nutrition | Pre-Workout Apple",8],["HEALTH","2026-05-04","Rawbite | Protein Peanut Caramel Reep",7.3],["HEALTH","2026-05-04","Yfood | Fruity Mango Drinkmaaltijd",1.4],
+["HEALTH","2026-05-11","Barebells | Proteinrepen XL",32.6],["HEALTH","2026-05-11","Yfood | Fruity Peach Drinkmaaltijd",27.7],["HEALTH","2026-05-11","Trek | High Protein Repen",20.5],["HEALTH","2026-05-11","Clean Nutrition | Pre-Workout Apple",16],["HEALTH","2026-05-11","Barebells | Proteinrepen",3.2],
+["HEALTH","2026-05-18","Other",39.4],["HEALTH","2026-05-18","Trek | High Protein Repen",23.2],["HEALTH","2026-05-18","Clean Nutrition | Pre-Workout Apple",20.6],["HEALTH","2026-05-18","Yfood | Fruity Peach Drinkmaaltijd",16.8],
+["HEALTH","2026-05-25","Trek | High Protein Repen",45.5],["HEALTH","2026-05-25","Holy Shot | Detox Ginger Turmeric",33.2],["HEALTH","2026-05-25","Clean Nutrition | Pre-Workout Apple",16.6],["HEALTH","2026-05-25","Other",4.7],
+["HEALTH","2026-06-01","Trek | High Protein Repen",46.2],["HEALTH","2026-06-01","Clean Nutrition | Pre-Workout Apple",23.4],["HEALTH","2026-06-01","Holy Shot | Detox Ginger Turmeric",13.9],["HEALTH","2026-06-01","Optimum | Protein Shake Strawberry",8.8],["HEALTH","2026-06-01","Other",7.8],
+["HEALTH","2026-06-08","Other",40.5],["HEALTH","2026-06-08","Trek | High Protein Repen",37.3],["HEALTH","2026-06-08","Optimum | Protein Shake Strawberry",11.7],["HEALTH","2026-06-08","Clean Nutrition | Pre-Workout Apple",10.3],["HEALTH","2026-06-08","Holy Shot | Detox Ginger Turmeric",0.2],
+["HEALTH","2026-06-15","Other",43.5],["HEALTH","2026-06-15","Trek | High Protein Repen",31.3],["HEALTH","2026-06-15","Optimum | Protein Shake Strawberry",15],["HEALTH","2026-06-15","Clean Nutrition | Pre-Workout Apple",10.1],
+["MEALS","2026-04-27","Knorr | Taquitos en Burritos",31.8],["MEALS","2026-04-27","Honig | Basispakketten Kip",21.8],["MEALS","2026-04-27","Unox | Good Instant Maaltijden",21.5],["MEALS","2026-04-27","Other",13.7],["MEALS","2026-04-27","Honig | Ovenschotel Mix Pakket",11.1],
+["MEALS","2026-05-04","The Green Table | Maaltijden",43.2],["MEALS","2026-05-04","Honig | Ovenschotel Mix Pakket",20.4],["MEALS","2026-05-04","Honig | Basispakketten Kip",18.5],["MEALS","2026-05-04","Knorr | Taquitos en Burritos",17.9],
+["MEALS","2026-05-11","Knorr | Wereldgerecht Mix",54.9],["MEALS","2026-05-11","Honig | Basispakketten Mix",22.7],["MEALS","2026-05-11","Honig | Ovenschotel Mix Pakket",14.9],["MEALS","2026-05-11","The Green Table | Maaltijden",3.9],["MEALS","2026-05-11","Knorr | Taquitos en Burritos",2.7],["MEALS","2026-05-11","Honig | Basispakketten Kip",0.9],
+["MEALS","2026-05-18","Knorr | Wereldgerecht Mix",66.1],["MEALS","2026-05-18","Other",21.5],["MEALS","2026-05-18","Amoy | Korean BBQ Maaltijdpakket",9.5],["MEALS","2026-05-18","Honig | Basispakketten Mix",2.7],["MEALS","2026-05-18","Unox | Good Instant Maaltijden",0.1],
+["MEALS","2026-05-25","Unox | Good Instant Maaltijden",29.1],["MEALS","2026-05-25","Knorr | Wereldgerecht Burritos",21.7],["MEALS","2026-05-25","Honig | Basispakketten Mix",20.5],["MEALS","2026-05-25","Amoy | Korean BBQ Maaltijdpakket",15.1],["MEALS","2026-05-25","Other",13.6],
+["MEALS","2026-06-01","Unox | Good Instant Maaltijden",34.8],["MEALS","2026-06-01","Knorr | Wereldgerecht Burritos",30.2],["MEALS","2026-06-01","Other",13.2],["MEALS","2026-06-01","Amoy | Korean BBQ Maaltijdpakket",11.5],["MEALS","2026-06-01","Onoff Spices | Tom Yum Noedels Soep",7],["MEALS","2026-06-01","Honig | Basispakketten Mix",3.2],
+["MEALS","2026-06-08","Unox | Good Instant Maaltijden",53.5],["MEALS","2026-06-08","Onoff Spices | Tom Yum Noedels Soep",22.1],["MEALS","2026-06-08","Knorr | Wereldgerecht Burritos",10.4],["MEALS","2026-06-08","Amoy | Korean BBQ Maaltijdpakket",9.4],["MEALS","2026-06-08","Other",4.5],
+["MEALS","2026-06-15","Other",57.7],["MEALS","2026-06-15","Unox | Good Instant Maaltijden",25.7],["MEALS","2026-06-15","Onoff Spices | Tom Yum Noedels Soep",13],["MEALS","2026-06-15","Amoy | Korean BBQ Maaltijdpakket",3.7],
+["KIDS","2026-04-27","Olvarit | Babyvoeding 6-8m+",71],["KIDS","2026-04-27","Olvarit | Baby Maaltijd 8 maanden",29],
+["KIDS","2026-05-04","Organix | Knijpfruit 12m+",100],
+["KIDS","2026-05-11","Organix | Knijpfruit 12m+",69.8],["KIDS","2026-05-11","Paw Patrol | Triangle Pops",21.4],["KIDS","2026-05-11","Olvarit | Babyvoeding 8+m",8.8],
+["KIDS","2026-05-18","Paw Patrol | Triangle Pops",34.1],["KIDS","2026-05-18","Organix | Knijpfruit 6m+",32.1],["KIDS","2026-05-18","Peppa Pig | Blueberry Fruit Bars",21.2],["KIDS","2026-05-18","Olvarit | Babyvoeding 8+m",12.6],
+["KIDS","2026-05-25","Olvarit | Knijpfruit Variatiemenu 6+m",43.4],["KIDS","2026-05-25","Organix | Knijpfruit 6m+",28.6],["KIDS","2026-05-25","Peppa Pig | Blueberry Fruit Bars",18.7],["KIDS","2026-05-25","Olvarit | Babyvoeding 8+m",6.2],["KIDS","2026-05-25","Paw Patrol | Triangle Pops",3],
+["KIDS","2026-06-01","Olvarit | Knijpfruit Variatiemenu 6+m",59.5],["KIDS","2026-06-01","Peppa Pig | Blueberry Fruit Bars",17.5],["KIDS","2026-06-01","Organix | Knijpfruit 6m+",16.1],["KIDS","2026-06-01","Olvarit | Babyvoeding 8+m",6.9],
+["KIDS","2026-06-08","Olvarit | Knijpfruit Variatiemenu 6+m",40.3],["KIDS","2026-06-08","Organix | Knijpfruit 12+m Bio",26.2],["KIDS","2026-06-08","Peppa Pig | Blueberry Fruit Bars",18.6],["KIDS","2026-06-08","Organix | Knijpfruit 6m+",14.6],["KIDS","2026-06-08","Olvarit | Babyvoeding 8+m",0.3],
+["KIDS","2026-06-15","Olvarit | Knijpfruit Variatiemenu 6+m",40.2],["KIDS","2026-06-15","Organix | Knijpfruit 12+m Bio",31.3],["KIDS","2026-06-15","Peppa Pig | Blueberry Fruit Bars",20.3],["KIDS","2026-06-15","Organix | Knijpfruit 6m+",8.1],
+["PET FOOD","2026-04-27","Cesar | Cuisine in Saus Kuipje Hond",41.1],["PET FOOD","2026-04-27","Smølke | Vers Gestoomde Maaltijd Hond",39],["PET FOOD","2026-04-27","Lily's Kitchen | Kip Hondenvoer",17.7],["PET FOOD","2026-04-27","Yarrah | Organic Kattenvoer",2.1],
+["PET FOOD","2026-05-04","Smølke | Vers Gestoomde Maaltijd Hond",44.8],["PET FOOD","2026-05-04","Cesar | Cuisine in Saus Kuipje Hond",28.1],["PET FOOD","2026-05-04","Yarrah | Organic Kattenvoer",25.6],["PET FOOD","2026-05-04","Lily's Kitchen | Kip Hondenvoer",1.5],
+["PET FOOD","2026-05-11","Smølke | Vers Gestoomde Maaltijd Hond",44.7],["PET FOOD","2026-05-11","Yarrah | Organic Kattenvoer",27.8],["PET FOOD","2026-05-11","Cesar | Cuisine in Saus Kuipje Hond",27.5],
+["PET FOOD","2026-05-18","Yarrah | Organic Kattenvoer",48.8],["PET FOOD","2026-05-18","Cesar | Cuisine in Saus Kuipje Hond",30.6],["PET FOOD","2026-05-18","Smølke | Vers Gestoomde Maaltijd Hond",20.6],
+["PET FOOD","2026-05-25","Sheba | Classics Pate met Vis",69.2],["PET FOOD","2026-05-25","Cesar | Cuisine in Saus Kuipje Hond",18],["PET FOOD","2026-05-25","Yarrah | Organic Kattenvoer",12.8],
+["PET FOOD","2026-06-01","Sheba | Classics Pate met Vis",66.5],["PET FOOD","2026-06-01","Cesar | Cuisine in Saus Kuipje Hond",23.3],["PET FOOD","2026-06-01","Lily's Kitchen | Senior Kattenvoer",6.1],["PET FOOD","2026-06-01","Lily's Kitchen | Adult Kattensnacks",4.1],
+["PET FOOD","2026-06-08","Sheba | Classics Pate met Vis",43.4],["PET FOOD","2026-06-08","Yarrah | Droge Kattenvoer",31.4],["PET FOOD","2026-06-08","Lily's Kitchen | Senior Kattenvoer",12.9],["PET FOOD","2026-06-08","Lily's Kitchen | Adult Hondenvoer",6.4],["PET FOOD","2026-06-08","Cesar | Cuisine in Saus Kuipje Hond",6],
+["PET FOOD","2026-06-15","Yarrah | Droge Kattenvoer",47.9],["PET FOOD","2026-06-15","Sheba | Classics Pate met Vis",37.6],["PET FOOD","2026-06-15","Lily's Kitchen | Senior Kattenvoer",14.5]
+];
+const WC_READOUT={
+ SNACKS:"<b>Snacks = hero-led.</b> Flat and unconcentrated until mid-May (top product &lt;10%), then the M&M's range floods in — by late May, M&M's products alone are ~25% of Snacks. Classic concentrated, hero-driven growth.",
+ DRINKS:"<b>Drinks = broad/spread.</b> 'Other' stays 62–84% all period; no single drink ever exceeds ~11%. New products (Lipton Ice Tea Green, Bundaberg, Pukka, Teisseire) rotate through but none dominates — growth came from <b>many products</b>, i.e. breadth.",
+ PANTRY:"<b>Pantry = broad, with a late hero push.</b> 'Other' is 52–81% most weeks (very spread), but watch the <b>HAK range arrive in June</b> (Mais/Bonenmix/Kikkererwten ≈25% combined). Mostly breadth, then a concentrated HAK addition.",
+ "NON-FOOD":"<b>Non-food = broad household/PC SKUs</b> (Robijn, Dove, Finish, WC Eend). No dominant product; consistent with a wide but thinning range (likely stock-outs over the period).",
+ HEALTH:"<b>Health = concentrated &amp; shrinking.</b> Increasingly dominated by Trek High Protein Repen (up to ~46%) as the rest drops away — a category narrowing, not growing.",
+ BREAKFAST:"<b>Breakfast = mixed → hero.</b> Spread early, then De Pindakaaswinkel Pindakaas takes ~40–49% from June — a single product reshaping the category.",
+ MEALS:"<b>Meals = small &amp; volatile</b> — a different product leads almost every week (low absolute revenue; read with caution).",
+ KIDS:"<b>Kids = tiny &amp; concentrated</b> — often one product (Olvarit/Organix) is most of the category in a given week. Very low absolute revenue.",
+ "PET FOOD":"<b>Pet food = small, rotates</b> — Smølke/Cesar early, then Sheba then Yarrah lead. Low absolute revenue."
+};
+const WC_CATWK={
+ DRINKS:   [20011,24611,18848,28643,27846,29081,26412,30897],
+ PANTRY:   [8247,8174,8857,8113,9125,8951,15034,12976],
+ SNACKS:   [30105,34730,36633,40475,39286,36536,44279,31420],
+ "NON-FOOD":[4489,4135,3766,4621,5041,4917,4097,2737],
+ HEALTH:   [6932,5757,2593,1899,1802,2554,2462,1593],
+ BREAKFAST:[3131,5847,6433,5364,4436,7094,8222,5235],
+ MEALS:    [915,1406,1027,672,1321,1175,1185,1619],
+ KIDS:     [232,825,671,763,1343,1128,1051,1032],
+ "PET FOOD":[1225,1473,1550,960,1472,1593,1405,770]
+};
+
+let wcChart=null, wcInit=false;
+const WC_ORDER=['DRINKS','PANTRY','SNACKS','NON-FOOD','HEALTH','BREAKFAST','MEALS','KIDS','PET FOOD'];
+const WC_GLOBAL_MAX=Math.ceil(Math.max(...Object.values(WC_CATWK).flat())/2000)*2000;
+function buildWithinCat(){
+  if(!wcInit){
+    wcInit=true;
+    const cats=[...new Set(WC_ROWS.map(r=>r[0]))];
+    cats.sort((a,b)=>{const ia=WC_ORDER.indexOf(a),ib=WC_ORDER.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib);});
+    const sel=document.getElementById('wc-cat');
+    cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+    sel.value='DRINKS';
+  }
+  renderWC();
+}
+function renderWC(){
+  const cat=document.getElementById('wc-cat').value;
+  const mode=document.getElementById('wc-mode').value;
+  const scale=document.getElementById('wc-scale').value;
+  const rows=WC_ROWS.filter(r=>r[0]===cat);
+  const tot=WC_CATWK[cat]||[0,0,0,0,0,0,0,0];
+  const valOf=(w,s)=>{const hit=rows.find(r=>r[1]===w&&r[2]===s);if(!hit)return 0;const wi=WC_WKD.indexOf(w);return mode==='pct'?hit[3]:Math.round(hit[3]/100*tot[wi]);};
+  const seriesTotals={};
+  rows.forEach(r=>{const wi=WC_WKD.indexOf(r[1]); seriesTotals[r[2]]=(seriesTotals[r[2]]||0)+r[3]/100*tot[wi];});
+  let series=Object.keys(seriesTotals).filter(s=>s!=='Other').sort((a,b)=>seriesTotals[b]-seriesTotals[a]);
+  series.push('Other');
+  const datasets=series.map((s,i)=>({label:s.replace(' | ',' · '),data:WC_WKD.map(w=>valOf(w,s)),backgroundColor:s==='Other'?'#d8cfc8':PAL[i%PAL.length],borderWidth:0,fill:true,tension:.25,pointRadius:0,stack:'s'}));
+  let yMax,yTitle,yTicks;
+  if(mode==='pct'){yMax=100;yTitle='% of category weekly revenue';yTicks=v=>v+'%';}
+  else{yMax=(scale==='fixed')?WC_GLOBAL_MAX:undefined;yTitle='category revenue per week (€)';yTicks=v=>'€'+(v/1000)+'k';}
+  if(wcChart) wcChart.destroy();
+  wcChart=new Chart(document.getElementById('wcArea'),{type:'line',
+    data:{labels:WC_WK,datasets},
+    options:{plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:9}}},
+      tooltip:{callbacks:{label:c=>c.dataset.label+': '+(mode==='pct'?c.raw+'%':'€'+Math.round(c.raw).toLocaleString())}}},
+      interaction:{mode:'index',intersect:false},
+      scales:{y:{stacked:true,min:0,max:yMax,ticks:{callback:yTicks},title:{display:true,text:yTitle}}}}});
+  document.getElementById('wc-title').textContent=cat+(mode==='pct'?' — product share of weekly revenue (%)':' — product revenue per week (€)');
+  document.getElementById('wc-readout').innerHTML=WC_READOUT[cat]||'';
+  const revFirst=tot[0],revLast=tot[7],grow=revFirst?Math.round(100*(revLast-revFirst)/revFirst):0,named=series.length-1;
+  const avgOther=Math.round(WC_WKD.map(w=>{const h=rows.find(r=>r[1]===w&&r[2]==='Other');return h?h[3]:0;}).reduce((a,b)=>a+b,0)/8);
+  document.getElementById('wc-statline').innerHTML=
+    `<span>category revenue: <b>€${revFirst.toLocaleString()}</b> → <b>€${revLast.toLocaleString()}</b> <span style="color:${grow>=0?'var(--ag)':'var(--coral)'}">(${grow>=0?'+':''}${grow}%)</span></span>`+
+    `<span><b>${named}</b> named products</span><span>avg "Other" (tail): <b>${avgOther}%</b></span>`;
+}
+// ---- end within-category ----
+
+build('trend');
+</script>
+</body>
+</html>
